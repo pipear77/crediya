@@ -1,14 +1,20 @@
 package co.com.pragma.model.solicitud;
-import lombok.Builder;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-//import lombok.NoArgsConstructor;
-import lombok.Setter;
+import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
+import co.com.pragma.model.solicitud.enums.TipoPrestamo;
+import lombok.*;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
-//@NoArgsConstructor
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class Solicitud {
+    String id;
+    String documentoIdentidad;
+    BigDecimal montoSolicitado;
+    Integer plazoMeses;
+    TipoPrestamo tipoPrestamo;
+    EstadoSolicitud estado;
 }

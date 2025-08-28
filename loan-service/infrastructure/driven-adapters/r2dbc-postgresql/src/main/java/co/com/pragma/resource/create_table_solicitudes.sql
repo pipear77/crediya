@@ -1,0 +1,10 @@
+CREATE TABLE solicitudes (
+  id SERIAL PRIMARY KEY,
+  documento_identidad VARCHAR(50) NOT NULL,
+  monto_solicitado DECIMAL(12, 2) NOT NULL,
+  plazo_meses INTEGER NOT NULL,
+  tipo_prestamo VARCHAR(30) NOT NULL,
+  estado VARCHAR(30) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
