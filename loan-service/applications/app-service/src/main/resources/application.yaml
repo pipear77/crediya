@@ -1,16 +1,27 @@
 server:
-  port: 8080
+  port: 8081
+  error:
+    include-message: always
 spring:
   application:
-    name: "loan-service"
-  devtools:
-    add-properties: false
+    name: "user-service"
+    #devtools:
+    #add-properties: false
   h2:
     console:
       enabled: true
       path: "/h2"
   profiles:
     include: null
+adapters:
+  r2dbc:
+    host: "localhost"
+    port: 5432
+    database: "crediya"
+    schema: public
+    username: "postgres"
+    password: "1234"
+
 management:
   endpoints:
     web:
@@ -22,3 +33,11 @@ management:
         enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enable: true
+

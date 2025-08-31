@@ -21,13 +21,13 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 
 @Configuration
-@Tag(name = "Solicitudes", description = "Operaciones para registrar y consultar solicitudes de préstamo")
+@Tag(name = "Solicitud", description = "Operaciones para registrar y consultar solicitudes de préstamo")
 public class RouterRest {
 
     @Bean
     @RouterOperations({
             @RouterOperation(
-                    path = "/api/v1/solicitudes",
+                    path = "/api/v1/solicitud",
                     method = RequestMethod.POST,
                     beanClass = SolicitudHandler.class,
                     beanMethod = "save",
@@ -49,7 +49,7 @@ public class RouterRest {
                     )
             ),
             @RouterOperation(
-                    path = "/api/v1/solicitudes/documento/{documento}",
+                    path = "/api/v1/solicitud/documento/{documento}",
                     method = RequestMethod.GET,
                     beanClass = SolicitudHandler.class,
                     beanMethod = "getByDocumento",
@@ -63,7 +63,7 @@ public class RouterRest {
                     )
             ),
             @RouterOperation(
-                    path = "/api/v1/solicitudes",
+                    path = "/api/v1/solicitud",
                     method = RequestMethod.GET,
                     beanClass = SolicitudHandler.class,
                     beanMethod = "getByTipo",
@@ -78,8 +78,8 @@ public class RouterRest {
             )
     })
     public RouterFunction<ServerResponse> solicitudRoutes(SolicitudHandler handler) {
-        return RouterFunctions.route(POST("/api/v1/solicitudes"), handler::save)
-                .andRoute(GET("/api/v1/solicitudes/documento/{documento}"), handler::getByDocumento)
-                .andRoute(GET("/api/v1/solicitudes"), handler::getByTipo); // usa query param ?tipo=CONSUMO
+        return RouterFunctions.route(POST("/api/v1/solicitud"), handler::save)
+                .andRoute(GET("/api/v1/solicitud/documento/{documento}"), handler::getByDocumento)
+                .andRoute(GET("/api/v1/solicitud"), handler::getByTipo); // usa query param ?tipo=CONSUMO
     }
 }

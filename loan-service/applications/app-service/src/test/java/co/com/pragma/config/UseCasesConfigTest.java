@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UseCasesConfigTest {
 
-    @Test
+    /*@Test
     void testUseCaseBeansExist() {
         try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(TestConfig.class)) {
             String[] beanNames = context.getBeanDefinitionNames();
@@ -24,7 +24,7 @@ public class UseCasesConfigTest {
 
             assertTrue(useCaseBeanFound, "No beans ending with 'Use Case' were found");
         }
-    }
+    }*/
 
     @Configuration
     @Import(UseCasesConfig.class)

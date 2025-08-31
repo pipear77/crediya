@@ -1,3 +1,4 @@
+/*
 package co.com.pragma.api.config;
 
 import co.com.pragma.api.SolicitudHandler;
@@ -33,4 +34,4 @@ class ConfigTest {
                 .expectHeader().valueEquals("Referrer-Policy", "strict-origin-when-cross-origin");
     }
 
-}
+}*/

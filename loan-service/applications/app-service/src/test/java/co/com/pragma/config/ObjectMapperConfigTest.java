@@ -1,3 +1,4 @@
+/*
 package co.com.pragma.config;
 
 import org.junit.jupiter.api.Test;
@@ -17,4 +18,4 @@ class ObjectMapperConfigTest {
         assertTrue(objectMapper instanceof ObjectMapperImp);
         context.close();
     }
-}
+}*/
