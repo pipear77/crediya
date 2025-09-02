@@ -1,10 +1,9 @@
 package co.com.pragma.usecase.solicitarprestamo;
 
-import co.com.pragma.model.solicitud.Solicitud;
+import co.com.pragma.model.solicitud.solicitudprestamos.Solicitud;
 import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import co.com.pragma.model.solicitud.enums.TipoPrestamo;
-import co.com.pragma.model.solicitud.gateways.SolicitudRepository;
-import co.com.pragma.usecase.exceptions.CampoObligatorioException;
+import co.com.pragma.model.solicitud.solicitudprestamos.gateways.SolicitudRepository;
 import co.com.pragma.usecase.exceptions.TipoPrestamoInvalidoException;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;

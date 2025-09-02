@@ -2,7 +2,7 @@ package co.com.pragma.api;
 
 import co.com.pragma.api.dto.SolicitudRequestDTO;
 import co.com.pragma.api.dto.SolicitudResponseDTO;
-import co.com.pragma.model.solicitud.Solicitud;
+import co.com.pragma.model.solicitud.solicitudprestamos.Solicitud;
 import co.com.pragma.model.solicitud.enums.TipoPrestamo;
 import co.com.pragma.usecase.solicitarprestamo.SolicitarPrestamoUseCase;
 import lombok.RequiredArgsConstructor;

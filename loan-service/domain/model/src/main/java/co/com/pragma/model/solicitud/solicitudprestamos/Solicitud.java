@@ -1,4 +1,4 @@
-package co.com.pragma.model.solicitud;
+package co.com.pragma.model.solicitud.solicitudprestamos;
 import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import co.com.pragma.model.solicitud.enums.TipoPrestamo;
 import lombok.*;

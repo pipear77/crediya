@@ -1,6 +1,6 @@
 package co.com.pragma.usecase.solicitarprestamo;
 
-import co.com.pragma.model.solicitud.Solicitud;
+import co.com.pragma.model.solicitud.solicitudprestamos.Solicitud;
 import co.com.pragma.model.solicitud.enums.TipoPrestamo;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

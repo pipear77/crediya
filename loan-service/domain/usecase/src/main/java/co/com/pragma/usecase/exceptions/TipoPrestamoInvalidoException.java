@@ -1,8 +1,8 @@
 package co.com.pragma.usecase.exceptions;
 
-public class TipoPrestamoInvalidoException extends RuntimeException {
+public class TipoPrestamoInvalidoException extends NegocioException {
 
-    public TipoPrestamoInvalidoException() {
-        super("El tipo de préstamo seleccionado no es válido.");
+    public TipoPrestamoInvalidoException(String message, int code) {
+        super(message, code);
     }
 }

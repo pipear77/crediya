@@ -1,8 +1,8 @@
 package co.com.pragma.r2dbc.adapter;
 
-import co.com.pragma.model.solicitud.Solicitud;
+import co.com.pragma.model.solicitud.solicitudprestamos.Solicitud;
 import co.com.pragma.model.solicitud.enums.TipoPrestamo;
-import co.com.pragma.model.solicitud.gateways.SolicitudRepository;
+import co.com.pragma.model.solicitud.solicitudprestamos.gateways.SolicitudRepository;
 import co.com.pragma.r2dbc.mapper.SolicitudMapper;
 import co.com.pragma.r2dbc.service.ReactiveSolicitudDataRepository;
 import lombok.RequiredArgsConstructor;
