@@ -1,10 +1,8 @@
 CREATE TABLE tipo_solicitudes (
-  id SERIAL PRIMARY KEY,
-  documento_identidad VARCHAR(50) NOT NULL,
-  monto_solicitado DECIMAL(12, 2) NOT NULL,
-  plazo_meses INTEGER NOT NULL,
-  tipo_prestamo VARCHAR(30) NOT NULL,
-  estado VARCHAR(30) NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id VARCHAR(36) PRIMARY KEY,
+  nombre VARCHAR(255) NOT NULL,
+  min_monto NUMERIC(14, 2) NOT NULL,
+  max_monto NUMERIC(14, 2) NOT NULL,
+  ratio_interes DOUBLE PRECISION NOT NULL,
+  aprobacion BOOLEAN NOT NULL
 );

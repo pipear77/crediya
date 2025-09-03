@@ -14,6 +14,6 @@ public class Solicitud {
     String documentoIdentidad;
     BigDecimal montoSolicitado;
     Integer plazoMeses;
-    Long idTipoPrestamo;
+    String idTipoPrestamo;
     EstadoSolicitud estado;
 }

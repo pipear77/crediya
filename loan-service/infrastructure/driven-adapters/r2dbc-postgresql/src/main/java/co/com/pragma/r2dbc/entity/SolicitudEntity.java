@@ -9,7 +9,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
 
-@Table("solicitudes")
+@Table(name = "solicitud_prestamo", schema = "public")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -25,7 +25,7 @@ public class SolicitudEntity {
     @Column("plazo_meses")
     private Integer plazoMeses;
     @Column("id_tipo_prestamo")
-    private Long idTipoPrestamo;
+    private String idTipoPrestamo;
     private EstadoSolicitud estado;
 
 }

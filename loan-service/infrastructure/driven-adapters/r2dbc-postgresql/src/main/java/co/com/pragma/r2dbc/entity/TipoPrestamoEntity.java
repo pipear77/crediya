@@ -6,7 +6,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
 
-@Table(name = "loan_type", schema = "public")
+@Table(name = "tipo_prestamo", schema = "public")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -15,11 +15,11 @@ import java.math.BigDecimal;
 
 public class TipoPrestamoEntity {
     @Id
-    private Long id;
-    private String name;
-    private BigDecimal minAmount;
-    private BigDecimal maxAmount;
-    private Double interestRate;
-    private Boolean automaticApproval;
+    private String id;
+    private String nombre;
+    private BigDecimal minMonto;
+    private BigDecimal maxMonto;
+    private Double ratioInteres;
+    private Boolean aprobacion;
 
 }

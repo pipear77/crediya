@@ -17,6 +17,8 @@ import co.com.pragma.usecase.exceptions.error.CodigosEstadoHttp;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 import static co.com.pragma.usecase.common.constantes.Constantes.*;
 
 @RequiredArgsConstructor
@@ -35,6 +37,7 @@ public class SolicitarPrestamoUseCase implements SolicitarPrestamoUseCaseInterfa
         return pipeline.validar(solicitud)
                 .then(verificarUsuario(solicitud.getDocumentoIdentidad()))
                 .then(Mono.defer(() -> {
+                    solicitud.setId(UUID.randomUUID().toString());
                     solicitud.setEstado(EstadoSolicitud.PENDIENTE_REVISION);
                     return solicitudRepository.guardar(solicitud);
                 }));

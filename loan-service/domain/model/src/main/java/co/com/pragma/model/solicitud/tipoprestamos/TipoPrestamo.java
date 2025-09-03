@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class TipoPrestamo {
-    private Long id;
+    private String id;
     private String nombre;
     private BigDecimal montoMinimo;
     private BigDecimal montoMaximo;

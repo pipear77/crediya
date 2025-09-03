@@ -49,11 +49,11 @@ class SolicitarPrestamoUseCaseTest {
                 .documentoIdentidad("111111")
                 .montoSolicitado(new BigDecimal("10000"))
                 .plazoMeses(12)
-                .idTipoPrestamo(1L)
+                .idTipoPrestamo("uuid-tipo-prestamo-001")
                 .build();
     }
 
-    private static TipoPrestamo loanType(long id) {
+    private static TipoPrestamo loanType(String id) {
         TipoPrestamo t = new TipoPrestamo();
         t.setId(id);
         t.setNombre("PERSONAL");

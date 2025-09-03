@@ -11,7 +11,7 @@ class TipoTest {
     @Test
     void validate_shouldComplete_whenDocumentNumberPresent() {
         Solicitud solicitud = new Solicitud();
-        solicitud.setIdTipoPrestamo(1111111L);
+        solicitud.setIdTipoPrestamo("uuid-tipo-prestamo-001");
         StepVerifier.create(validator.validar(solicitud)).verifyComplete();
     }
 
