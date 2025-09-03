@@ -1,1 +1,5 @@
 
+[submodule "user-service"]
+	path = user-service
+	url = https://github.com/pipear77/user-service.git
+	branch = main
