@@ -1,78 +1,54 @@
 package co.com.pragma.api;
 
 import co.com.pragma.api.dto.SolicitudRequestDTO;
-import co.com.pragma.api.dto.SolicitudResponseDTO;
-import co.com.pragma.model.solicitud.Solicitud;
-import co.com.pragma.model.solicitud.enums.TipoPrestamo;
+import co.com.pragma.api.mapper.SolicitudApiMapper;
 import co.com.pragma.usecase.solicitarprestamo.SolicitarPrestamoUseCase;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-@Component
+import java.util.Set;
+
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class SolicitudHandler {
 
     private final SolicitarPrestamoUseCase useCase;
+    private final SolicitudApiMapper mapper;
+    private final Validator validator;
 
     public Mono<ServerResponse> save(ServerRequest request) {
-        return request.bodyToMono(SolicitudRequestDTO.class)
-                .doOnSubscribe(sub -> log.info("Iniciando registro de solicitud"))
-                .map(this::toDomain)
-                .flatMap(useCase::ejecutar)
-                .map(this::toResponseDTO)
-                .flatMap(dto -> ServerResponse.status(201).bodyValue(dto))
-                .onErrorResume(e -> {
-                    log.error("Error al registrar solicitud: {}", e.getMessage(), e);
-                    return ServerResponse.badRequest().bodyValue("Error: " + e.getMessage());
-                });
+        log.info("Solicitud de préstamo recibida");
+
+        return request
+                .bodyToMono(SolicitudRequestDTO.class)
+                .doOnNext(dto -> log.info("Payload recibido: {}", dto))
+                .flatMap(this::validate)
+                .map(mapper::toDomain)
+                .flatMap(useCase::crearSolicitud)
+                .map(mapper::toResponseDTO)
+                .doOnNext(res -> log.info("Solicitud registrada: {}", res))
+                .doOnError(e -> log.error("Error al registrar solicitud", e))
+                .flatMap(response -> ServerResponse
+                        .created(request.uri())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(response));
     }
 
-    public Mono<ServerResponse> getByDocumento(ServerRequest request) {
-        String documento = request.pathVariable("documento");
-        return useCase.buscarPorDocumento(documento)
-                .map(this::toResponseDTO)
-                .flatMap(dto -> ServerResponse.ok().bodyValue(dto))
-                .switchIfEmpty(ServerResponse.notFound().build())
-                .doOnError(e -> log.error("Error al buscar solicitud por documento: {}", e.getMessage(), e));
-    }
-
-    public Mono<ServerResponse> getByTipo(ServerRequest request) {
-        String tipoParam = request.queryParam("tipo").orElse("");
-        try {
-            TipoPrestamo tipo = TipoPrestamo.valueOf(tipoParam.toUpperCase());
-            return useCase.listarPorTipo(tipo)
-                    .map(this::toResponseDTO)
-                    .collectList()
-                    .flatMap(lista -> ServerResponse.ok().bodyValue(lista));
-        } catch (IllegalArgumentException ex) {
-            log.warn("Tipo de préstamo inválido: {}", tipoParam);
-            return ServerResponse.badRequest().bodyValue("Tipo de préstamo inválido: " + tipoParam);
+    private <T> Mono<T> validate(T bean) {
+        Set<ConstraintViolation<T>> violations = validator.validate(bean);
+        if (!violations.isEmpty()) {
+            log.warn("Validación fallida: {}", violations);
+            return Mono.error(new ConstraintViolationException(violations));
         }
-    }
-
-    private Solicitud toDomain(SolicitudRequestDTO dto) {
-        return Solicitud.builder()
-                .documentoIdentidad(dto.getDocumentoIdentidad())
-                .montoSolicitado(dto.getMontoSolicitado())
-                .plazoMeses(dto.getPlazoMeses())
-                .tipoPrestamo(dto.getTipoPrestamo())
-                .estado(dto.getEstado()) // opcional, se sobreescribe en el use case
-                .build();
-    }
-
-    private SolicitudResponseDTO toResponseDTO(Solicitud domain) {
-        return SolicitudResponseDTO.builder()
-                .id(domain.getId())
-                .documentoIdentidad(domain.getDocumentoIdentidad())
-                .montoSolicitado(domain.getMontoSolicitado())
-                .plazoMeses(domain.getPlazoMeses())
-                .tipoPrestamo(domain.getTipoPrestamo())
-                .estado(domain.getEstado())
-                .build();
+        return Mono.just(bean);
     }
 }

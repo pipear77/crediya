@@ -1,5 +1,5 @@
 CREATE TABLE solicitudes (
-  id SERIAL PRIMARY KEY,
+  id VARCHAR(36) PRIMARY KEY,
   documento_identidad VARCHAR(50) NOT NULL,
   monto_solicitado DECIMAL(12, 2) NOT NULL,
   plazo_meses INTEGER NOT NULL,

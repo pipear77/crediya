@@ -1,6 +1,5 @@
-package co.com.pragma.model.solicitud;
+package co.com.pragma.model.solicitud.solicitudprestamos;
 import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
-import co.com.pragma.model.solicitud.enums.TipoPrestamo;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -15,6 +14,6 @@ public class Solicitud {
     String documentoIdentidad;
     BigDecimal montoSolicitado;
     Integer plazoMeses;
-    TipoPrestamo tipoPrestamo;
+    String idTipoPrestamo;
     EstadoSolicitud estado;
 }

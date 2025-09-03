@@ -49,6 +49,12 @@ subprojects {
                     "-XX:+AllowRedefinitionToAddDeleteMethods"
             ]
         }
+        // Asegúrate de que también se aplique para Java 17+
+        if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
+            jvmArgs += [
+                    "-XX:+AllowRedefinitionToAddDeleteMethods"
+            ]
+        }
     }
 
     test.finalizedBy(project.tasks.jacocoTestReport)
