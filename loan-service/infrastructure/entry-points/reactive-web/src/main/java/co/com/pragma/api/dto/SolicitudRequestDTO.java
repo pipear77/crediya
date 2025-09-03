@@ -1,7 +1,6 @@
 package co.com.pragma.api.dto;
 
 import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
-import co.com.pragma.model.solicitud.enums.TipoPrestamo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 

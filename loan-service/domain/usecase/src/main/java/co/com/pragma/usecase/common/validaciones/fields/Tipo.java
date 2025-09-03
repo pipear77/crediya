@@ -11,7 +11,7 @@ import static co.com.pragma.usecase.common.constantes.Constantes.ERROR_TIPO_REQU
 public class Tipo implements SolicitarPrestamoValidacion {
     @Override
     public Mono<Void> validar(Solicitud solicitud) {
-        if (solicitud.getTipoPrestamo() == null || solicitud.getTipoPrestamo().describeConstable().isEmpty())
+        if (solicitud.getIdTipoPrestamo() == null || solicitud.getIdTipoPrestamo().describeConstable().isEmpty())
             return Mono.error(new ValidacionCampoException(ERROR_TIPO_REQUERIDO, CodigosEstadoHttp.BAD_REQUEST.getCode()));
 
         return Mono.empty();

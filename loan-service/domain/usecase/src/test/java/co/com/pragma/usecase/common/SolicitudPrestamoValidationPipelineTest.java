@@ -17,7 +17,7 @@ class SolicitudPrestamoValidationPipelineTest {
                 .agregarValidacion(solicitud1)
                 .agregarValidacion(solicitud2);
 
-        StepVerifier.create(pipeline.validate(new Solicitud()))
+        StepVerifier.create(pipeline.validar(new Solicitud()))
                 .verifyComplete();
     }
 

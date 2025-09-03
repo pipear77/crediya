@@ -48,38 +48,8 @@ public class RouterRest {
                             }
                     )
             ),
-            @RouterOperation(
-                    path = "/api/v1/solicitud/documento/{documento}",
-                    method = RequestMethod.GET,
-                    beanClass = SolicitudHandler.class,
-                    beanMethod = "getByDocumento",
-                    operation = @Operation(
-                            summary = "Buscar solicitud por documento",
-                            description = "Obtiene una solicitud específica por documento de identidad",
-                            responses = {
-                                    @ApiResponse(responseCode = "200", description = "Solicitud encontrada"),
-                                    @ApiResponse(responseCode = "404", description = "No encontrada")
-                            }
-                    )
-            ),
-            @RouterOperation(
-                    path = "/api/v1/solicitud",
-                    method = RequestMethod.GET,
-                    beanClass = SolicitudHandler.class,
-                    beanMethod = "getByTipo",
-                    operation = @Operation(
-                            summary = "Listar solicitudes por tipo",
-                            description = "Obtiene todas las solicitudes filtradas por tipo de préstamo",
-                            responses = {
-                                    @ApiResponse(responseCode = "200", description = "Lista de solicitudes"),
-                                    @ApiResponse(responseCode = "400", description = "Tipo inválido")
-                            }
-                    )
-            )
     })
     public RouterFunction<ServerResponse> solicitudRoutes(SolicitudHandler handler) {
-        return RouterFunctions.route(POST("/api/v1/solicitud"), handler::save)
-                .andRoute(GET("/api/v1/solicitud/documento/{documento}"), handler::getByDocumento)
-                .andRoute(GET("/api/v1/solicitud"), handler::getByTipo); // usa query param ?tipo=CONSUMO
+        return RouterFunctions.route(POST("/api/v1/solicitud"), handler::save);
     }
 }

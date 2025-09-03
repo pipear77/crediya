@@ -16,7 +16,7 @@ public class SolicitudPrestamoValidationPipeline {
         return this;
     }
 
-    public Mono<Void> validate(Solicitud solicitud) {
+    public Mono<Void> validar(Solicitud solicitud) {
         Mono<Void> result = Mono.empty();
 
         for (SolicitarPrestamoValidacion validation : validations) {

@@ -7,8 +7,8 @@ import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
 
-class CantidadTest {
-    private final Cantidad validator = new Cantidad();
+class MontoTest {
+    private final Monto validator = new Monto();
 
     @Test
     void validate_shouldComplete_whenAmountPresent() {

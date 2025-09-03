@@ -2,7 +2,6 @@ package co.com.pragma.r2dbc.entity;
 
 
 import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
-import co.com.pragma.model.solicitud.enums.TipoPrestamo;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
@@ -25,8 +24,8 @@ public class SolicitudEntity {
     private BigDecimal montoSolicitado;
     @Column("plazo_meses")
     private Integer plazoMeses;
-    @Column("tipo_prestamo")
-    private TipoPrestamo tipoPrestamo;
+    @Column("id_tipo_prestamo")
+    private Long idTipoPrestamo;
     private EstadoSolicitud estado;
 
 }

@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 
 import static co.com.pragma.usecase.common.constantes.Constantes.ERROR_MONTO_REQUERIDO;
 
-public class Cantidad implements SolicitarPrestamoValidacion {
+public class Monto implements SolicitarPrestamoValidacion {
     @Override
     public Mono<Void> validar(Solicitud solicitud) {
         if (solicitud.getMontoSolicitado() == null)

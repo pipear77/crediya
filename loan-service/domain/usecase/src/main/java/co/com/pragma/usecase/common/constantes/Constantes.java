@@ -5,7 +5,6 @@ public class Constantes {
 
     // Mensajes de error
     public static final String TIPO_PRESTAMO_NO_ENCONTRADO = "Tipo de préstamo no encontrado";
-    public static final String ESTADO_PRESTAMO_NO_ENCONTRADO = "Estado del préstamo no encontrado";
     public static final String USUARIO_NO_ENCONTRADO = "Usuario no encontrado";
 
     // Estados de préstamo
