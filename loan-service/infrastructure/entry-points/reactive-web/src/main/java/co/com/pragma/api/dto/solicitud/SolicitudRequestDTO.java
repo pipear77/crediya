@@ -1,4 +1,4 @@
-package co.com.pragma.api.dto;
+package co.com.pragma.api.dto.solicitud;
 
 import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -8,10 +8,6 @@ import java.math.BigDecimal;
 
 @Schema(name = "SolicitudRequestDTO", description = "Datos para registrar una solicitud de préstamo")
 public record SolicitudRequestDTO(
-
-        @NotBlank
-        @Schema(example = "123456789", description = "Documento de identidad del solicitante")
-        String documentoIdentidad,
 
         @NotNull
         @DecimalMin(value = "0.0", inclusive = false)

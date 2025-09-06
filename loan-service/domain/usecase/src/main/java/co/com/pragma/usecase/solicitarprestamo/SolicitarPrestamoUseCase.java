@@ -1,8 +1,8 @@
 package co.com.pragma.usecase.solicitarprestamo;
 
+import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import co.com.pragma.model.solicitud.gateways.UsuarioClientRepository;
 import co.com.pragma.model.solicitud.solicitudprestamos.Solicitud;
-import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import co.com.pragma.model.solicitud.solicitudprestamos.gateways.SolicitudRepository;
 import co.com.pragma.model.solicitud.tipoprestamos.TipoPrestamo;
 import co.com.pragma.model.solicitud.tipoprestamos.gateways.TipoPrestamoRepository;
@@ -23,10 +23,12 @@ import static co.com.pragma.usecase.common.constantes.Constantes.*;
 
 @RequiredArgsConstructor
 public class SolicitarPrestamoUseCase implements SolicitarPrestamoUseCaseInterface {
+
     private final SolicitudRepository solicitudRepository;
     private final UsuarioClientRepository usuarioClientRepository;
     private final TipoPrestamoRepository tipoPrestamoRepository;
 
+    @Override
     public Mono<Solicitud> crearSolicitud(Solicitud solicitud) {
         SolicitudPrestamoValidationPipeline pipeline = new SolicitudPrestamoValidationPipeline()
                 .agregarValidacion(new NumeroDocumento())
@@ -36,22 +38,28 @@ public class SolicitarPrestamoUseCase implements SolicitarPrestamoUseCaseInterfa
 
         return pipeline.validar(solicitud)
                 .then(verificarUsuario(solicitud.getDocumentoIdentidad()))
-                .then(Mono.defer(() -> {
+                .then(findTipoPrestamoById(solicitud)) // validación adicional
+                .flatMap(tipo -> {
                     solicitud.setId(UUID.randomUUID().toString());
                     solicitud.setEstado(EstadoSolicitud.PENDIENTE_REVISION);
                     return solicitudRepository.guardar(solicitud);
-                }));
+                });
     }
 
     private Mono<TipoPrestamo> findTipoPrestamoById(Solicitud solicitud) {
         return tipoPrestamoRepository.findById(solicitud.getIdTipoPrestamo())
-                .switchIfEmpty(Mono.error(new TipoPrestamoNotFoundException(TIPO_PRESTAMO_NO_ENCONTRADO, CODIGO_NO_ENCONTRADO)));
+                .switchIfEmpty(Mono.error(new TipoPrestamoNotFoundException(
+                        TIPO_PRESTAMO_NO_ENCONTRADO,
+                        CODIGO_NO_ENCONTRADO
+                )));
     }
-
 
     private Mono<Void> verificarUsuario(String documentoIdentidad) {
         return usuarioClientRepository.buscarPorDocumento(documentoIdentidad)
-                .switchIfEmpty(Mono.error(new ValidacionCampoException(USUARIO_NO_ENCONTRADO, CodigosEstadoHttp.NOT_FOUND.getCode())))
+                .switchIfEmpty(Mono.error(new ValidacionCampoException(
+                        USUARIO_NO_ENCONTRADO,
+                        CodigosEstadoHttp.NOT_FOUND.getCode()
+                )))
                 .then();
     }
 }
