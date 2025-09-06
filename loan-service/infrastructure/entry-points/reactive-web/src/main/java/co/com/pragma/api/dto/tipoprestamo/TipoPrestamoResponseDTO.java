@@ -1,4 +1,4 @@
-package co.com.pragma.api.dto;
+package co.com.pragma.api.dto.tipoprestamo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

@@ -17,7 +17,7 @@ adapters:
   r2dbc:
     host: "localhost"
     port: 5432
-    database: "crediya"
+    database: "loan_db"
     schema: public
     username: "postgres"
     password: "1234"

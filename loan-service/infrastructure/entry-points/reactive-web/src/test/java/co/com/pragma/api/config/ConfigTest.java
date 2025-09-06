@@ -2,9 +2,11 @@ package co.com.pragma.api.config;
 
 import co.com.pragma.api.RouterRest;
 import co.com.pragma.api.SolicitudHandler;
-import co.com.pragma.api.dto.SolicitudRequestDTO;
-import co.com.pragma.api.dto.SolicitudResponseDTO;
+import co.com.pragma.api.dto.solicitud.SolicitudRequestDTO;
+import co.com.pragma.api.dto.solicitud.SolicitudResponseDTO;
+import co.com.pragma.api.helper.TokenExtractor;
 import co.com.pragma.api.mapper.SolicitudApiMapper;
+import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import co.com.pragma.model.solicitud.solicitudprestamos.Solicitud;
 import co.com.pragma.usecase.solicitarprestamo.SolicitarPrestamoUseCase;
 import jakarta.validation.Validator;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -42,23 +45,69 @@ class ConfigTest {
     @MockBean
     private Validator validator;
 
+    @MockBean
+    private TokenExtractor tokenExtractor;
+
+
+    private SolicitudRequestDTO dto;
+    private Solicitud domain;
+    private SolicitudResponseDTO responseDTO;
+
     @BeforeEach
     void setup() {
-        SolicitudRequestDTO dto = new SolicitudRequestDTO("123456789", new BigDecimal("5000000"), 24, "uuid", null);
-        Solicitud domain = Solicitud.builder().id("sol123").build();
+        dto = new SolicitudRequestDTO(
+                new BigDecimal("5000000"),
+                24,
+                "uuid",
+                EstadoSolicitud.PENDIENTE_REVISION
+        );
 
+        domain = Solicitud.builder()
+                .id("sol123")
+                .documentoIdentidad("123456789")
+                .montoSolicitado(dto.montoSolicitado())
+                .plazoMeses(dto.plazoMeses())
+                .idTipoPrestamo(dto.idTipoPrestamo())
+                .estado(dto.estado())
+                .build();
+
+        responseDTO = new SolicitudResponseDTO(
+                "sol123",
+                "123456789",
+                dto.montoSolicitado(),
+                dto.plazoMeses(),
+                dto.idTipoPrestamo(),
+                dto.estado()
+        );
+
+        // ✅ Stub para validación del DTO
         when(validator.validate(any(SolicitudRequestDTO.class))).thenReturn(Collections.emptySet());
-        when(mapper.toDomain(dto)).thenReturn(domain);
+
+        // ✅ Stub para extracción del usuario desde el token
+        when(tokenExtractor.extractUsuario(any(String.class)))
+                .thenReturn(Mono.just(
+                        co.com.pragma.api.dto.usuario.UsuarioAutenticadoDTO.builder()
+                                .documentoIdentidad("123456789")
+                                .rol("ROL_CLIENTE")
+                                .estado("ACTIVO")
+                                .sesionActiva(true)
+                                .build()
+                ));
+
+        // ✅ Stub para mapeo y persistencia
+        when(mapper.toDomain(dto, "123456789")).thenReturn(domain);
         when(useCase.crearSolicitud(domain)).thenReturn(Mono.just(domain));
-        when(mapper.toResponseDTO(domain)).thenReturn(new SolicitudResponseDTO("sol123", "123456789", new BigDecimal("5000000"), 24, "uuid", null));
+        when(mapper.toResponseDTO(domain)).thenReturn(responseDTO);
     }
+
 
     @Test
     void corsConfigurationShouldAllowOrigins() {
         webTestClient.post()
                 .uri("/api/v1/solicitudes")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer fake-token") // Simula token
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(new SolicitudRequestDTO("123456789", new BigDecimal("5000000"), 24, "uuid", null))
+                .bodyValue(dto)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectHeader().valueEquals("Content-Security-Policy", "default-src 'self'; frame-ancestors 'self'; form-action 'self'")
@@ -69,5 +118,4 @@ class ConfigTest {
                 .expectHeader().valueEquals("Pragma", "no-cache")
                 .expectHeader().valueEquals("Referrer-Policy", "strict-origin-when-cross-origin");
     }
-
 }

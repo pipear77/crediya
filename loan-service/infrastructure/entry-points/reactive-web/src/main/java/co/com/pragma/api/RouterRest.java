@@ -1,7 +1,7 @@
 package co.com.pragma.api;
 
-import co.com.pragma.api.dto.SolicitudRequestDTO;
-import co.com.pragma.api.dto.SolicitudResponseDTO;
+import co.com.pragma.api.dto.solicitud.SolicitudRequestDTO;
+import co.com.pragma.api.dto.solicitud.SolicitudResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

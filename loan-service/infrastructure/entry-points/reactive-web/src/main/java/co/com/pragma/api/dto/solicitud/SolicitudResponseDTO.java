@@ -1,4 +1,4 @@
-package co.com.pragma.api.dto;
+package co.com.pragma.api.dto.solicitud;
 
 import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import io.swagger.v3.oas.annotations.media.Schema;
