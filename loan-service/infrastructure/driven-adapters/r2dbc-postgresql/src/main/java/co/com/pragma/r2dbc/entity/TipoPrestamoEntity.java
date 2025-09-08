@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Table(name = "tipo_prestamo", schema = "public")
 @AllArgsConstructor
@@ -15,7 +16,7 @@ import java.math.BigDecimal;
 
 public class TipoPrestamoEntity {
     @Id
-    private String id;
+    private UUID id;
     private String nombre;
     private BigDecimal minMonto;
     private BigDecimal maxMonto;

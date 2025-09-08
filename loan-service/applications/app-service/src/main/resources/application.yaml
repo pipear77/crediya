@@ -44,3 +44,9 @@ springdoc:
 external:
   user-service:
     url: http://localhost:8080
+
+security:
+  jwt:
+    secret: YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXo1Njc4OTAxMjM0NTY3ODkwMTIzNDU2
+    expiration: 3600000 # 1 hora en milisegundos
+

@@ -8,6 +8,9 @@ import java.math.BigDecimal;
 @Schema(name = "TipoPrestamoRequestDTO", description = "Datos para crear o actualizar un tipo de préstamo")
 public record TipoPrestamoRequestDTO(
 
+        @Schema(example = "b3f1c2e4-9a2d-4d7e-8c3a-2a1f5e6d9f1a", description = "Identificador único del tipo de préstamo")
+        String id,
+
         @NotBlank
         @Schema(example = "CONSUMO", description = "Nombre del tipo de préstamo")
         String nombre,

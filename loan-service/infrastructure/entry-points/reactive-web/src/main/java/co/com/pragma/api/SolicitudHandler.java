@@ -2,7 +2,6 @@ package co.com.pragma.api;
 
 import co.com.pragma.api.dto.solicitud.SolicitudRequestDTO;
 import co.com.pragma.api.dto.solicitud.SolicitudResponseDTO;
-import co.com.pragma.api.dto.usuario.UsuarioAutenticadoDTO;
 import co.com.pragma.api.helper.TokenExtractor;
 import co.com.pragma.api.mapper.SolicitudApiMapper;
 import co.com.pragma.model.solicitud.solicitudprestamos.Solicitud;
@@ -19,6 +18,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -33,13 +33,15 @@ public class SolicitudHandler {
     public Mono<ServerResponse> save(ServerRequest request) {
         log.info("Solicitud de préstamo recibida");
 
-        String token = request.headers().firstHeader("Authorization");
-        if (token == null || !token.startsWith("Bearer ")) {
+        String rawToken = request.headers().firstHeader("Authorization");
+        if (rawToken == null || !rawToken.startsWith("Bearer ")) {
             log.warn("Token no presente o mal formado");
             return ServerResponse.status(401).bodyValue("Token de autorización requerido");
         }
 
-        return tokenExtractor.extractUsuario(token)
+        String cleanedToken = rawToken.substring(7).trim();
+
+        return tokenExtractor.extractUsuario(rawToken)
                 .flatMap(usuario -> {
                     if (!"ROL_CLIENTE".equals(usuario.getRol())) {
                         log.warn("Rol no autorizado: {}", usuario.getRol());
@@ -49,15 +51,13 @@ public class SolicitudHandler {
                     return request.bodyToMono(SolicitudRequestDTO.class)
                             .doOnNext(dto -> log.info("Payload recibido: {}", dto))
                             .flatMap(this::validate)
-                            .map(dto -> mapper.toDomain(dto, usuario.getDocumentoIdentidad()))
-                            .flatMap(solicitud -> {
-                                log.debug("Solicitud mapeada: {}", solicitud);
-                                return useCase.crearSolicitud(solicitud);
+                            .map(dto -> {
+                                Solicitud solicitud = mapper.toDomain(dto, usuario.getDocumentoIdentidad());
+                                solicitud.setId(UUID.fromString(usuario.getId()));
+                                return solicitud;
                             })
-                            .map(saved -> {
-                                log.debug("Solicitud persistida: {}", saved);
-                                return mapper.toResponseDTO(saved);
-                            })
+                            .flatMap(solicitud -> useCase.crearSolicitud(solicitud, cleanedToken))
+                            .map(mapper::toResponseDTO)
                             .flatMap(responseDTO -> ServerResponse
                                     .created(request.uri())
                                     .contentType(MediaType.APPLICATION_JSON)

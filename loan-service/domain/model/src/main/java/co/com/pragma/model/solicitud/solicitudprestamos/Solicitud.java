@@ -3,6 +3,7 @@ import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -10,10 +11,10 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class Solicitud {
-    String id;
+    UUID id;
     String documentoIdentidad;
     BigDecimal montoSolicitado;
     Integer plazoMeses;
-    String idTipoPrestamo;
+    UUID idTipoPrestamo;
     EstadoSolicitud estado;
 }

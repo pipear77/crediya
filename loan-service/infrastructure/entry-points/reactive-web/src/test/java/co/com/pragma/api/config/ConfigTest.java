@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -48,45 +49,66 @@ class ConfigTest {
     @MockBean
     private TokenExtractor tokenExtractor;
 
-
     private SolicitudRequestDTO dto;
     private Solicitud domain;
     private SolicitudResponseDTO responseDTO;
 
     @BeforeEach
     void setup() {
+        UUID solicitudId = UUID.randomUUID();
+        String documentoIdentidad = "123456789";
+        UUID tipoPrestamoId = UUID.randomUUID();
+
         dto = new SolicitudRequestDTO(
                 new BigDecimal("5000000"),
                 24,
-                "uuid",
+                "uuid-tipo-prestamo-001",
                 EstadoSolicitud.PENDIENTE_REVISION
         );
 
         domain = Solicitud.builder()
-                .id("sol123")
-                .documentoIdentidad("123456789")
+                .id(solicitudId)
+                .documentoIdentidad(documentoIdentidad)
                 .montoSolicitado(dto.montoSolicitado())
                 .plazoMeses(dto.plazoMeses())
-                .idTipoPrestamo(dto.idTipoPrestamo())
+                .idTipoPrestamo(tipoPrestamoId)
                 .estado(dto.estado())
                 .build();
 
         responseDTO = new SolicitudResponseDTO(
-                "sol123",
-                "123456789",
+                solicitudId.toString(),
+                documentoIdentidad,
                 dto.montoSolicitado(),
                 dto.plazoMeses(),
                 dto.idTipoPrestamo(),
                 dto.estado()
         );
 
-        // ✅ Stub para validación del DTO
         when(validator.validate(any(SolicitudRequestDTO.class))).thenReturn(Collections.emptySet());
 
-        // ✅ Stub para extracción del usuario desde el token
         when(tokenExtractor.extractUsuario(any(String.class)))
                 .thenReturn(Mono.just(
                         co.com.pragma.api.dto.usuario.UsuarioAutenticadoDTO.builder()
+                                .documentoIdentidad(documentoIdentidad)
+                                .rol("ROL_CLIENTE")
+                                .estado("ACTIVO")
+                                .sesionActiva(true)
+                                .build()
+                ));
+
+        when(mapper.toDomain(dto, documentoIdentidad)).thenReturn(domain);
+        when(useCase.crearSolicitud(any(Solicitud.class), any(String.class))).thenReturn(Mono.just(domain));
+        when(mapper.toResponseDTO(domain)).thenReturn(responseDTO);
+    }
+
+    @Test
+    void corsConfigurationShouldAllowOrigins() {
+        UUID usuarioId = UUID.randomUUID(); // ✅ ID necesario para evitar NullPointerException
+
+        when(tokenExtractor.extractUsuario(any(String.class)))
+                .thenReturn(Mono.just(
+                        co.com.pragma.api.dto.usuario.UsuarioAutenticadoDTO.builder()
+                                .id(usuarioId.toString()) // ✅ ahora sí tiene ID
                                 .documentoIdentidad("123456789")
                                 .rol("ROL_CLIENTE")
                                 .estado("ACTIVO")
@@ -94,18 +116,9 @@ class ConfigTest {
                                 .build()
                 ));
 
-        // ✅ Stub para mapeo y persistencia
-        when(mapper.toDomain(dto, "123456789")).thenReturn(domain);
-        when(useCase.crearSolicitud(domain)).thenReturn(Mono.just(domain));
-        when(mapper.toResponseDTO(domain)).thenReturn(responseDTO);
-    }
-
-
-    @Test
-    void corsConfigurationShouldAllowOrigins() {
         webTestClient.post()
                 .uri("/api/v1/solicitudes")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer fake-token") // Simula token
+                .header(HttpHeaders.AUTHORIZATION, "Bearer fake-token")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(dto)
                 .exchange()
@@ -118,4 +131,5 @@ class ConfigTest {
                 .expectHeader().valueEquals("Pragma", "no-cache")
                 .expectHeader().valueEquals("Referrer-Policy", "strict-origin-when-cross-origin");
     }
+
 }

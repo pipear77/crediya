@@ -10,12 +10,14 @@ import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Slf4j
 @Repository
 public class TipoPrestamoRepositoryAdapter extends ReactiveAdapterOperations<
         TipoPrestamo,
         TipoPrestamoEntity,
-        String,
+        UUID,
         ReactiveTipoPrestamoRepository
         > implements TipoPrestamoRepository {
 
@@ -24,9 +26,14 @@ public class TipoPrestamoRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
-    public Mono<TipoPrestamo> findById(String id) {
-        log.info("Buscando tipo de préstamo por ID: {}", id);
+    public Mono<TipoPrestamo> findById(UUID id) {
+        log.info("🔍 Buscando tipo de préstamo con ID: {}", id);
+
         return super.findById(id)
-                .doOnNext(tipo -> log.info("Tipo de préstamo encontrado: {}", tipo));
+                .doOnNext(tipo -> log.info("✅ Tipo de préstamo encontrado: {}", tipo))
+                .onErrorResume(e -> {
+                    log.error("❌ Error al consultar tipo de préstamo con ID: {}", id, e);
+                    return Mono.error(new RuntimeException("Error al consultar tipo de préstamo con ID: " + id));
+                });
     }
 }

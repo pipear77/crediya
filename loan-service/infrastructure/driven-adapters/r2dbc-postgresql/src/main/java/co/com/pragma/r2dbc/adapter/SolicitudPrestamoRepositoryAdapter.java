@@ -7,9 +7,12 @@ import co.com.pragma.r2dbc.helper.ReactiveAdapterOperations;
 import co.com.pragma.r2dbc.repositories.ReactiveSolicitudRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivecommons.utils.ObjectMapper;
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
+
+import java.util.UUID;
 
 import static co.com.pragma.r2dbc.common.Constantes.SOLICITUD_PRESTAMO_NOT_SAVED_ERROR_MSG;
 
@@ -18,25 +21,35 @@ import static co.com.pragma.r2dbc.common.Constantes.SOLICITUD_PRESTAMO_NOT_SAVED
 public class SolicitudPrestamoRepositoryAdapter extends ReactiveAdapterOperations<
         Solicitud,
         SolicitudEntity,
-        String,
+        UUID,
         ReactiveSolicitudRepository
         > implements SolicitudRepository {
 
     private final TransactionalOperator txOperator;
 
-    public SolicitudPrestamoRepositoryAdapter(ReactiveSolicitudRepository repository, ObjectMapper mapper, TransactionalOperator txOperator) {
+    private final R2dbcEntityTemplate entityTemplate;
+
+    public SolicitudPrestamoRepositoryAdapter(ReactiveSolicitudRepository repository, ObjectMapper mapper, TransactionalOperator txOperator, R2dbcEntityTemplate entityTemplate) {
         super(repository, mapper, d -> mapper.map(d, Solicitud.class));
         this.txOperator = txOperator;
+        this.entityTemplate = entityTemplate;
     }
 
     @Override
     public Mono<Solicitud> guardar(Solicitud solicitud) {
         log.info("Guardando solicitud: {}", solicitud);
-        return txOperator.transactional(super.save(solicitud))
-                .doOnNext(saved -> log.info("Solicitud guardada: {}", saved))
+
+        SolicitudEntity entity = mapper.map(solicitud, SolicitudEntity.class);
+
+        return txOperator.transactional(
+                        entityTemplate.insert(SolicitudEntity.class)
+                                .using(entity)
+                                .map(saved -> mapper.map(saved, Solicitud.class))
+                ).doOnNext(saved -> log.info("Solicitud guardada: {}", saved))
                 .onErrorResume(e -> {
                     log.error("Error al guardar solicitud: {}", solicitud, e);
                     return Mono.error(new RuntimeException(SOLICITUD_PRESTAMO_NOT_SAVED_ERROR_MSG));
                 });
     }
+
 }

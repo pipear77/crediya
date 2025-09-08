@@ -9,9 +9,12 @@ import org.reactivecommons.utils.ObjectMapper;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.UUID;
+
 import static org.mockito.Mockito.*;
 
 class TipoPrestamoRepositoryAdapterTest {
+
     private ReactiveTipoPrestamoRepository repository;
     private ObjectMapper mapper;
     private TipoPrestamoRepositoryAdapter adapter;
@@ -25,7 +28,7 @@ class TipoPrestamoRepositoryAdapterTest {
 
     @Test
     void findById_deberiaRetornarTipoPrestamo_siExiste() {
-        String id = "uuid-tipo-001";
+        UUID id = UUID.randomUUID();
 
         TipoPrestamoEntity entity = TipoPrestamoEntity.builder()
                 .id(id)
@@ -50,7 +53,7 @@ class TipoPrestamoRepositoryAdapterTest {
 
     @Test
     void findById_deberiaRetornarMonoVacio_siNoExiste() {
-        String id = "uuid-inexistente";
+        UUID id = UUID.randomUUID();
 
         when(repository.findById(id)).thenReturn(Mono.empty());
 

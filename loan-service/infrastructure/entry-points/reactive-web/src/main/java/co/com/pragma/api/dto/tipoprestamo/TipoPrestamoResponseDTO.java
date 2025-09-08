@@ -3,12 +3,13 @@ package co.com.pragma.api.dto.tipoprestamo;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Schema(name = "TipoPrestamoResponseDTO", description = "Datos del tipo de préstamo disponible")
 public record TipoPrestamoResponseDTO(
 
         @Schema(example = "uuid-tipo-prestamo-001", description = "Identificador único del tipo de préstamo")
-        String id,
+        UUID id,
 
         @Schema(example = "CONSUMO", description = "Nombre del tipo de préstamo")
         String nombre,

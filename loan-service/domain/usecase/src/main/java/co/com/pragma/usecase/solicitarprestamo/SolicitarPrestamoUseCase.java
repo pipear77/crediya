@@ -29,7 +29,7 @@ public class SolicitarPrestamoUseCase implements SolicitarPrestamoUseCaseInterfa
     private final TipoPrestamoRepository tipoPrestamoRepository;
 
     @Override
-    public Mono<Solicitud> crearSolicitud(Solicitud solicitud) {
+    public Mono<Solicitud> crearSolicitud(Solicitud solicitud, String token) {
         SolicitudPrestamoValidationPipeline pipeline = new SolicitudPrestamoValidationPipeline()
                 .agregarValidacion(new NumeroDocumento())
                 .agregarValidacion(new Tipo())
@@ -37,25 +37,25 @@ public class SolicitarPrestamoUseCase implements SolicitarPrestamoUseCaseInterfa
                 .agregarValidacion(new Monto());
 
         return pipeline.validar(solicitud)
-                .then(verificarUsuario(solicitud.getDocumentoIdentidad()))
-                .then(findTipoPrestamoById(solicitud)) // validación adicional
+                .then(verificarUsuario(solicitud.getDocumentoIdentidad(), token))
+                .then(findTipoPrestamoById(solicitud.getIdTipoPrestamo()))
                 .flatMap(tipo -> {
-                    solicitud.setId(UUID.randomUUID().toString());
+                    solicitud.setId(UUID.randomUUID());
                     solicitud.setEstado(EstadoSolicitud.PENDIENTE_REVISION);
                     return solicitudRepository.guardar(solicitud);
                 });
     }
 
-    private Mono<TipoPrestamo> findTipoPrestamoById(Solicitud solicitud) {
-        return tipoPrestamoRepository.findById(solicitud.getIdTipoPrestamo())
+    private Mono<TipoPrestamo> findTipoPrestamoById(UUID tipoId) {
+        return tipoPrestamoRepository.findById(tipoId)
                 .switchIfEmpty(Mono.error(new TipoPrestamoNotFoundException(
                         TIPO_PRESTAMO_NO_ENCONTRADO,
                         CODIGO_NO_ENCONTRADO
                 )));
     }
 
-    private Mono<Void> verificarUsuario(String documentoIdentidad) {
-        return usuarioClientRepository.buscarPorDocumento(documentoIdentidad)
+    private Mono<Void> verificarUsuario(String documentoIdentidad, String token) {
+        return usuarioClientRepository.buscarPorDocumento(documentoIdentidad, token)
                 .switchIfEmpty(Mono.error(new ValidacionCampoException(
                         USUARIO_NO_ENCONTRADO,
                         CodigosEstadoHttp.NOT_FOUND.getCode()

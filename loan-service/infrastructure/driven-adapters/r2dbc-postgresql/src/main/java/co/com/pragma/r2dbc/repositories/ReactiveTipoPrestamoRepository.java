@@ -6,6 +6,8 @@ import co.com.pragma.r2dbc.entity.TipoPrestamoEntity;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
-public interface ReactiveTipoPrestamoRepository extends ReactiveCrudRepository<TipoPrestamoEntity, String>, ReactiveQueryByExampleExecutor<TipoPrestamoEntity> {
+import java.util.UUID;
+
+public interface ReactiveTipoPrestamoRepository extends ReactiveCrudRepository<TipoPrestamoEntity, UUID>, ReactiveQueryByExampleExecutor<TipoPrestamoEntity> {
 }
 

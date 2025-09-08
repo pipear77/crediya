@@ -18,10 +18,11 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static co.com.pragma.usecase.common.constantes.Constantes.USUARIO_NO_ENCONTRADO;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,39 +39,45 @@ class SolicitarPrestamoUseCaseTest {
     @Mock
     private TipoPrestamoRepository tipoPrestamoRepository;
 
+    private final String token = "fake-token";
+    private final UUID tipoId = UUID.randomUUID();
+
     @BeforeEach
     void setUp() {
         useCase = new SolicitarPrestamoUseCase(solicitudRepository, usuarioClientRepository, tipoPrestamoRepository);
     }
 
-    private static Solicitud solicitudValida() {
+    private Solicitud solicitudValida() {
         return Solicitud.builder()
                 .documentoIdentidad("111111")
                 .montoSolicitado(new BigDecimal("10000"))
                 .plazoMeses(12)
-                .idTipoPrestamo("uuid-tipo-prestamo-001")
+                .idTipoPrestamo(tipoId) // ✅ ahora es UUID directamente
                 .build();
     }
 
-    private static TipoPrestamo loanType(String id) {
-        TipoPrestamo t = new TipoPrestamo();
-        t.setId(id);
-        t.setNombre("PERSONAL");
-        return t;
+    private TipoPrestamo loanType(UUID id) {
+        return TipoPrestamo.builder()
+                .id(id)
+                .nombre("PERSONAL")
+                .build();
     }
 
     @Test
     void crearSolicitud_deberiaGuardarSolicitud_siTodoEsValido() {
         Solicitud solicitud = solicitudValida();
 
-        when(usuarioClientRepository.buscarPorDocumento("111111"))
+        when(usuarioClientRepository.buscarPorDocumento("111111", token))
                 .thenReturn(Mono.just(solicitud));
-        when(tipoPrestamoRepository.findById("uuid-tipo-prestamo-001"))
-                .thenReturn(Mono.just(loanType("uuid-tipo-prestamo-001")));
+        when(tipoPrestamoRepository.findById(tipoId))
+                .thenReturn(Mono.just(loanType(tipoId)));
         when(solicitudRepository.guardar(any(Solicitud.class)))
-                .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
+                .thenAnswer(invocation -> {
+                    Solicitud s = invocation.getArgument(0);
+                    return Mono.just(s.toBuilder().id(UUID.randomUUID()).estado(EstadoSolicitud.PENDIENTE_REVISION).build());
+                });
 
-        StepVerifier.create(useCase.crearSolicitud(solicitud))
+        StepVerifier.create(useCase.crearSolicitud(solicitud, token))
                 .assertNext(saved -> {
                     assertNotNull(saved.getId());
                     assertEquals(EstadoSolicitud.PENDIENTE_REVISION, saved.getEstado());
@@ -78,8 +85,8 @@ class SolicitarPrestamoUseCaseTest {
                 })
                 .verifyComplete();
 
-        verify(usuarioClientRepository).buscarPorDocumento("111111");
-        verify(tipoPrestamoRepository).findById("uuid-tipo-prestamo-001");
+        verify(usuarioClientRepository).buscarPorDocumento("111111", token);
+        verify(tipoPrestamoRepository).findById(tipoId);
         verify(solicitudRepository).guardar(any(Solicitud.class));
         verifyNoMoreInteractions(usuarioClientRepository, tipoPrestamoRepository, solicitudRepository);
     }
@@ -88,12 +95,12 @@ class SolicitarPrestamoUseCaseTest {
     void crearSolicitud_deberiaFallar_siUsuarioNoExiste() {
         Solicitud solicitud = solicitudValida();
 
-        when(usuarioClientRepository.buscarPorDocumento("111111"))
+        when(usuarioClientRepository.buscarPorDocumento("111111", token))
                 .thenReturn(Mono.empty());
-        when(tipoPrestamoRepository.findById("uuid-tipo-prestamo-001"))
-                .thenReturn(Mono.just(new TipoPrestamo()));
+        when(tipoPrestamoRepository.findById(tipoId))
+                .thenReturn(Mono.just(loanType(tipoId)));
 
-        StepVerifier.create(useCase.crearSolicitud(solicitud))
+        StepVerifier.create(useCase.crearSolicitud(solicitud, token))
                 .expectErrorSatisfies(error -> {
                     assertInstanceOf(ValidacionCampoException.class, error);
                     assertEquals(USUARIO_NO_ENCONTRADO, ((ValidacionCampoException) error).getMessage());
@@ -101,7 +108,7 @@ class SolicitarPrestamoUseCaseTest {
                 })
                 .verify();
 
-        verify(usuarioClientRepository).buscarPorDocumento("111111");
+        verify(usuarioClientRepository).buscarPorDocumento("111111", token);
         verifyNoInteractions(solicitudRepository);
     }
 
@@ -109,17 +116,17 @@ class SolicitarPrestamoUseCaseTest {
     void crearSolicitud_deberiaFallar_siTipoPrestamoNoExiste() {
         Solicitud solicitud = solicitudValida();
 
-        when(usuarioClientRepository.buscarPorDocumento("111111"))
+        when(usuarioClientRepository.buscarPorDocumento("111111", token))
                 .thenReturn(Mono.just(solicitud));
-        when(tipoPrestamoRepository.findById("uuid-tipo-prestamo-001"))
+        when(tipoPrestamoRepository.findById(tipoId))
                 .thenReturn(Mono.empty());
 
-        StepVerifier.create(useCase.crearSolicitud(solicitud))
+        StepVerifier.create(useCase.crearSolicitud(solicitud, token))
                 .expectError(TipoPrestamoNotFoundException.class)
                 .verify();
 
-        verify(usuarioClientRepository).buscarPorDocumento("111111");
-        verify(tipoPrestamoRepository).findById("uuid-tipo-prestamo-001");
+        verify(usuarioClientRepository).buscarPorDocumento("111111", token);
+        verify(tipoPrestamoRepository).findById(tipoId);
         verifyNoInteractions(solicitudRepository);
     }
 
@@ -129,20 +136,17 @@ class SolicitarPrestamoUseCaseTest {
                 .documentoIdentidad(null)
                 .build();
 
-        // Mock explícito para evitar NPE por llamada con null
-        when(usuarioClientRepository.buscarPorDocumento(isNull()))
+        when(usuarioClientRepository.buscarPorDocumento(isNull(), eq(token)))
                 .thenReturn(Mono.just(new Solicitud()));
+        when(tipoPrestamoRepository.findById(tipoId))
+                .thenReturn(Mono.just(loanType(tipoId)));
 
-        when(tipoPrestamoRepository.findById(any()))
-                .thenReturn(Mono.just(new TipoPrestamo())); // o isNull() si quieres ser más preciso
-
-        StepVerifier.create(useCase.crearSolicitud(solicitud))
+        StepVerifier.create(useCase.crearSolicitud(solicitud, token))
                 .expectError(ValidacionCampoException.class)
                 .verify();
 
         verifyNoInteractions(solicitudRepository);
     }
-
 
     @Test
     void crearSolicitud_deberiaFallar_siMontoEsNulo() {
@@ -150,12 +154,12 @@ class SolicitarPrestamoUseCaseTest {
                 .montoSolicitado(null)
                 .build();
 
-        when(usuarioClientRepository.buscarPorDocumento("111111"))
+        when(usuarioClientRepository.buscarPorDocumento("111111", token))
                 .thenReturn(Mono.just(solicitud));
-        when(tipoPrestamoRepository.findById("uuid-tipo-prestamo-001"))
-                .thenReturn(Mono.just(new TipoPrestamo()));
+        when(tipoPrestamoRepository.findById(tipoId))
+                .thenReturn(Mono.just(loanType(tipoId)));
 
-        StepVerifier.create(useCase.crearSolicitud(solicitud))
+        StepVerifier.create(useCase.crearSolicitud(solicitud, token))
                 .expectError(ValidacionCampoException.class)
                 .verify();
 
@@ -168,12 +172,12 @@ class SolicitarPrestamoUseCaseTest {
                 .plazoMeses(null)
                 .build();
 
-        when(usuarioClientRepository.buscarPorDocumento("111111"))
+        when(usuarioClientRepository.buscarPorDocumento("111111", token))
                 .thenReturn(Mono.just(solicitud));
-        when(tipoPrestamoRepository.findById("uuid-tipo-prestamo-001"))
-                .thenReturn(Mono.just(new TipoPrestamo()));
+        when(tipoPrestamoRepository.findById(tipoId))
+                .thenReturn(Mono.just(loanType(tipoId)));
 
-        StepVerifier.create(useCase.crearSolicitud(solicitud))
+        StepVerifier.create(useCase.crearSolicitud(solicitud, token))
                 .expectError(ValidacionCampoException.class)
                 .verify();
 
@@ -186,15 +190,23 @@ class SolicitarPrestamoUseCaseTest {
                 .idTipoPrestamo(null)
                 .build();
 
-        when(usuarioClientRepository.buscarPorDocumento("111111"))
+        when(usuarioClientRepository.buscarPorDocumento("111111", token))
                 .thenReturn(Mono.just(solicitud));
-        when(tipoPrestamoRepository.findById(isNull()))
-                .thenReturn(Mono.just(new TipoPrestamo()));
 
-        StepVerifier.create(useCase.crearSolicitud(solicitud))
-                .expectError(ValidacionCampoException.class)
+        // ✅ Mock explícito para evitar NullPointerException
+        when(tipoPrestamoRepository.findById(isNull()))
+                .thenReturn(Mono.empty());
+
+        StepVerifier.create(useCase.crearSolicitud(solicitud, token))
+                .expectErrorSatisfies(error -> {
+                    assertInstanceOf(ValidacionCampoException.class, error);
+                    assertEquals("El tipo es obligatorio", error.getMessage());
+                })
                 .verify();
 
+        verify(usuarioClientRepository).buscarPorDocumento("111111", token);
+        verify(tipoPrestamoRepository).findById(null);
         verifyNoInteractions(solicitudRepository);
     }
+
 }

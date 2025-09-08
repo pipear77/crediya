@@ -17,7 +17,7 @@ CREATE TABLE tipo_prestamo (
 -- Crear tabla solicitud_prestamo
 CREATE TABLE solicitud_prestamo (
     id UUID PRIMARY KEY,
-    documento_tident VARCHAR(15) NOT NULL,
+    documento_identidad VARCHAR(15) NOT NULL,
     monto_solicitado NUMERIC(20,2) NOT NULL,
     plazo_meses INTEGER NOT NULL,
     id_tipo_prestamo UUID NOT NULL,

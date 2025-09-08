@@ -8,6 +8,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Table(name = "solicitud_prestamo", schema = "public")
 @AllArgsConstructor
@@ -17,7 +18,7 @@ import java.math.BigDecimal;
 @Builder
 public class SolicitudEntity {
     @Id
-    private String id;
+    private UUID id;
     @Column("documento_identidad")
     private String documentoIdentidad;
     @Column("monto_solicitado")
@@ -25,7 +26,7 @@ public class SolicitudEntity {
     @Column("plazo_meses")
     private Integer plazoMeses;
     @Column("id_tipo_prestamo")
-    private String idTipoPrestamo;
+    private UUID idTipoPrestamo;
     private EstadoSolicitud estado;
 
 }
