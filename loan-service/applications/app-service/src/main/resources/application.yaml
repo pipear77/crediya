@@ -49,4 +49,9 @@ security:
   jwt:
     secret: YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXo1Njc4OTAxMjM0NTY3ODkwMTIzNDU2
     expiration: 3600000 # 1 hora en milisegundos
-
+    
+spring:
+  datasource:
+    url: jdbc:postgresql://loan-db:5432/loan_db
+    username: postgres
+    password: "1234"

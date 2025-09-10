@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+
+  postgres-loan:
+    image: postgres:15
+    container_name: loan-db
+    environment:
+      POSTGRES_DB: loan_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5433:5432"
+    volumes:
+      - loan-data:/var/lib/postgresql/data
+    networks:
+      - crediya-net
+
+  postgres-user:
+    image: postgres:15
+    container_name: user-db
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5434:5432"
+    volumes:
+      - user-data:/var/lib/postgresql/data
+    networks:
+      - crediya-net
+
+  loan-service:
+    build: ./loan-service
+    container_name: loan-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres-loan
+    networks:
+      - crediya-net
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres-user
+    networks:
+      - crediya-net
+
+volumes:
+  loan-data:
+  user-data:
+
+networks:
+  crediya-net:
