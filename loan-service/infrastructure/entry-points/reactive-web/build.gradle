@@ -9,3 +9,8 @@ dependencies {
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
     implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.2.0'
 }
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:unchecked"
+    options.encoding = 'UTF-8'
+}

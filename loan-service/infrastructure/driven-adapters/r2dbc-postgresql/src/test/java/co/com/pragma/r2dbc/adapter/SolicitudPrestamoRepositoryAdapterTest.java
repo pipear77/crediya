@@ -2,6 +2,7 @@ package co.com.pragma.r2dbc.adapter;
 
 import co.com.pragma.model.solicitud.solicitudprestamos.Solicitud;
 import co.com.pragma.r2dbc.entity.SolicitudEntity;
+import co.com.pragma.r2dbc.mapper.SolicitudEntityMapper;
 import co.com.pragma.r2dbc.repositories.ReactiveSolicitudRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import reactor.test.StepVerifier;
 
 import java.util.UUID;
 
+import static co.com.pragma.r2dbc.common.Constantes.SOLICITUD_PRESTAMO_NOT_SAVED_ERROR_MSG;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -22,33 +24,27 @@ class SolicitudPrestamoRepositoryAdapterTest {
     private ReactiveSolicitudRepository repository;
     private ObjectMapper mapper;
     private TransactionalOperator txOperator;
-    private SolicitudPrestamoRepositoryAdapter adapter;
     private R2dbcEntityTemplate entityTemplate;
+    private SolicitudEntityMapper solicitudMapper;
+    private SolicitudPrestamoRepositoryAdapter adapter;
 
     @BeforeEach
     void setUp() {
         repository = mock(ReactiveSolicitudRepository.class);
         mapper = mock(ObjectMapper.class);
         txOperator = mock(TransactionalOperator.class);
-        entityTemplate = mock(R2dbcEntityTemplate.class); // ✅ mock explícito
+        entityTemplate = mock(R2dbcEntityTemplate.class);
+        solicitudMapper = mock(SolicitudEntityMapper.class);
 
-        adapter = new SolicitudPrestamoRepositoryAdapter(repository, mapper, txOperator, entityTemplate);
+        adapter = new SolicitudPrestamoRepositoryAdapter(repository, mapper, txOperator, entityTemplate, solicitudMapper);
     }
 
     @Test
     void guardarSolicitud_exito() {
+        // Arrange
         UUID id = UUID.randomUUID();
-
-        Solicitud solicitud = Solicitud.builder()
-                .id(id)
-                .documentoIdentidad("123456789")
-                .build();
-
-        SolicitudEntity entity = SolicitudEntity.builder()
-                .id(id)
-                .documentoIdentidad("123456789")
-                .build();
-
+        Solicitud solicitud = Solicitud.builder().id(id).documentoIdentidad("123456789").build();
+        SolicitudEntity entity = SolicitudEntity.builder().id(id).documentoIdentidad("123456789").build();
         ReactiveInsertOperation.ReactiveInsert<SolicitudEntity> insertSpec = mock(ReactiveInsertOperation.ReactiveInsert.class);
 
         when(mapper.map(solicitud, SolicitudEntity.class)).thenReturn(entity);
@@ -57,23 +53,24 @@ class SolicitudPrestamoRepositoryAdapterTest {
         when(mapper.map(entity, Solicitud.class)).thenReturn(solicitud);
         when(txOperator.transactional(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
+        // Act & Assert
         StepVerifier.create(adapter.guardar(solicitud))
                 .expectNextMatches(saved -> saved.getId().equals(id))
                 .verifyComplete();
 
+        verify(mapper).map(solicitud, SolicitudEntity.class);
         verify(entityTemplate).insert(SolicitudEntity.class);
         verify(insertSpec).using(entity);
         verify(txOperator).transactional(any(Mono.class));
+        verify(mapper).map(entity, Solicitud.class);
     }
-
 
     @Test
     void guardarSolicitud_error() {
+        // Arrange
         UUID id = UUID.randomUUID();
-
         Solicitud solicitud = Solicitud.builder().id(id).build();
         SolicitudEntity entity = SolicitudEntity.builder().id(id).build();
-
         ReactiveInsertOperation.ReactiveInsert<SolicitudEntity> insertSpec = mock(ReactiveInsertOperation.ReactiveInsert.class);
 
         when(mapper.map(solicitud, SolicitudEntity.class)).thenReturn(entity);
@@ -81,14 +78,15 @@ class SolicitudPrestamoRepositoryAdapterTest {
         when(insertSpec.using(entity)).thenReturn(Mono.error(new RuntimeException("DB error")));
         when(txOperator.transactional(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
+        // Act & Assert
         StepVerifier.create(adapter.guardar(solicitud))
                 .expectErrorMatches(e -> e instanceof RuntimeException &&
-                        e.getMessage().equals("Error creando la solicitud de prestamo"))
+                        e.getMessage().equals(SOLICITUD_PRESTAMO_NOT_SAVED_ERROR_MSG))
                 .verify();
 
+        verify(mapper).map(solicitud, SolicitudEntity.class);
         verify(entityTemplate).insert(SolicitudEntity.class);
         verify(insertSpec).using(entity);
         verify(txOperator).transactional(any(Mono.class));
     }
-
 }

@@ -15,8 +15,10 @@ import co.com.pragma.usecase.exceptions.TipoPrestamoNotFoundException;
 import co.com.pragma.usecase.exceptions.ValidacionCampoException;
 import co.com.pragma.usecase.exceptions.error.CodigosEstadoHttp;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static co.com.pragma.usecase.common.constantes.Constantes.*;
@@ -31,19 +33,51 @@ public class SolicitarPrestamoUseCase implements SolicitarPrestamoUseCaseInterfa
     @Override
     public Mono<Solicitud> crearSolicitud(Solicitud solicitud, String token) {
         SolicitudPrestamoValidationPipeline pipeline = new SolicitudPrestamoValidationPipeline()
-                .agregarValidacion(new NumeroDocumento())
                 .agregarValidacion(new Tipo())
                 .agregarValidacion(new Plazo())
                 .agregarValidacion(new Monto());
 
         return pipeline.validar(solicitud)
-                .then(verificarUsuario(solicitud.getDocumentoIdentidad(), token))
-                .then(findTipoPrestamoById(solicitud.getIdTipoPrestamo()))
-                .flatMap(tipo -> {
-                    solicitud.setId(UUID.randomUUID());
-                    solicitud.setEstado(EstadoSolicitud.PENDIENTE_REVISION);
-                    return solicitudRepository.guardar(solicitud);
-                });
+                .then(usuarioClientRepository.buscarPorDocumento(solicitud.getDocumentoIdentidad(), token)
+                        .switchIfEmpty(Mono.error(new ValidacionCampoException(
+                                USUARIO_NO_ENCONTRADO,
+                                CodigosEstadoHttp.NOT_FOUND.getCode()
+                        )))
+                )
+                .flatMap(usuario -> findTipoPrestamoById(solicitud.getIdTipoPrestamo())
+                        .flatMap(tipo -> {
+                            if (solicitud.getMontoSolicitado() == null ||
+                                    tipo.getMontoMinimo() == null ||
+                                    tipo.getMontoMaximo() == null) {
+                                return Mono.error(new ValidacionCampoException(
+                                        "No se puede validar el monto solicitado porque falta información financiera del tipo de préstamo",
+                                        CodigosEstadoHttp.BAD_REQUEST.getCode()
+                                ));
+                            }
+
+                            if (solicitud.getMontoSolicitado().compareTo(tipo.getMontoMinimo()) < 0 ||
+                                    solicitud.getMontoSolicitado().compareTo(tipo.getMontoMaximo()) > 0) {
+                                return Mono.error(new ValidacionCampoException(
+                                        "El monto solicitado debe estar entre " + tipo.getMontoMinimo() + " y " + tipo.getMontoMaximo(),
+                                        CodigosEstadoHttp.BAD_REQUEST.getCode()
+                                ));
+                            }
+
+                            // Asignación interna de campos
+                            solicitud.setId(UUID.randomUUID());
+                            solicitud.setEstado(EstadoSolicitud.PENDIENTE_REVISION);
+                            solicitud.setCorreo(usuario.getCorreo());
+                            solicitud.setNombre(usuario.getNombres() + " " + usuario.getApellidos());
+                            solicitud.setSalarioBase(usuario.getSalarioBase());
+                            solicitud.setCanal("APP_WEB");
+                            solicitud.setTipoPrestamo(tipo.getNombre());
+                            solicitud.setTasaInteres(tipo.getTasaInteres());
+                            solicitud.setMontoMensualSolicitud(
+                                    solicitud.getMontoSolicitado().divide(BigDecimal.valueOf(solicitud.getPlazoMeses()), 2, BigDecimal.ROUND_HALF_UP)
+                            );
+
+                            return solicitudRepository.guardar(solicitud);
+                        }));
     }
 
     private Mono<TipoPrestamo> findTipoPrestamoById(UUID tipoId) {

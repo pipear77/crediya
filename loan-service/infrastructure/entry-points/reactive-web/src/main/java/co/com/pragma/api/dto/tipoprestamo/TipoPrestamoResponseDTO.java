@@ -15,14 +15,14 @@ public record TipoPrestamoResponseDTO(
         String nombre,
 
         @Schema(example = "1000000.00", description = "Monto mínimo permitido")
-        BigDecimal minMonto,
+        BigDecimal montoMinimo,
 
         @Schema(example = "10000000.00", description = "Monto máximo permitido")
-        BigDecimal maxMonto,
+        BigDecimal montoMaximo,
 
         @Schema(example = "0.015", description = "Ratio de interés aplicado")
-        Double ratioInteres,
+        Double tasaInteres,
 
         @Schema(example = "true", description = "Indica si requiere aprobación manual")
-        Boolean aprobacion
+        Boolean aprobacionAutomatica
 ) {}

@@ -1,13 +1,17 @@
 package co.com.pragma.r2dbc.repositories;
 
+import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import co.com.pragma.r2dbc.entity.SolicitudEntity;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 
 // TODO: This file is just an example, you should delete or modify it
 public interface ReactiveSolicitudRepository extends ReactiveCrudRepository<SolicitudEntity, UUID>, ReactiveQueryByExampleExecutor<SolicitudEntity> {
+    Flux<SolicitudEntity> findByEstadoIn(List<EstadoSolicitud> estados);
 }

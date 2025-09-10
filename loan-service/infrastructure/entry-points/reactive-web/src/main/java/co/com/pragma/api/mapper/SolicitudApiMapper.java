@@ -12,24 +12,33 @@ import java.util.UUID;
 @Mapper(componentModel = "spring")
 public interface SolicitudApiMapper {
 
-    @Mapping(target = "id", ignore = true) // se genera en el use case
-    @Mapping(target = "documentoIdentidad", source = "documentoIdentidad")
-    @Mapping(target = "montoSolicitado", source = "dto.montoSolicitado")
-    @Mapping(target = "plazoMeses", source = "dto.plazoMeses")
-    @Mapping(target = "idTipoPrestamo", source = "dto.idTipoPrestamo")
-    @Mapping(target = "estado", source = "dto.estado")
-    Solicitud toDomain(SolicitudRequestDTO dto, String documentoIdentidad);
+    @Mapping(target = "id", ignore = true)
+    @Mapping(source = "idTipoPrestamo", target = "idTipoPrestamo", qualifiedByName = "stringToUUID")
+    Solicitud toDomain(SolicitudRequestDTO dto);
 
+    // ✅ Mapeo completo para el DTO de salida
     @Mapping(source = "id", target = "id", qualifiedByName = "uuidToString")
-    @Mapping(target = "documentoIdentidad", source = "documentoIdentidad")
-    @Mapping(target = "montoSolicitado", source = "montoSolicitado")
-    @Mapping(target = "plazoMeses", source = "plazoMeses")
-    @Mapping(target = "idTipoPrestamo", source = "idTipoPrestamo")
-    @Mapping(target = "estado", source = "estado")
-    SolicitudResponseDTO toResponseDTO(Solicitud domain);
+    @Mapping(source = "documentoIdentidad", target = "documentoIdentidad")
+    @Mapping(source = "correo", target = "correo")
+    @Mapping(source = "nombre", target = "nombre")
+    @Mapping(source = "canal", target = "canal")
+    @Mapping(source = "plazoMeses", target = "plazoMeses")
+    @Mapping(source = "idTipoPrestamo", target = "idTipoPrestamo", qualifiedByName = "uuidToString")
+    @Mapping(source = "salarioBase", target = "salarioBase")
+    @Mapping(source = "montoSolicitado", target = "montoSolicitado")
+    @Mapping(source = "montoMensualSolicitud", target = "montoMensualSolicitud")
+    @Mapping(source = "tasaInteres", target = "tasaInteres")
+    @Mapping(source = "estado", target = "estado")
+    @Mapping(source = "tipoPrestamo", target = "tipoTramite") // se asigna internamente en el UseCase
+    SolicitudResponseDTO toResponseDTO(Solicitud solicitud);
 
     @Named("uuidToString")
     default String uuidToString(UUID id) {
         return id != null ? id.toString() : null;
+    }
+
+    @Named("stringToUUID")
+    default UUID stringToUUID(String id) {
+        return id != null && !id.isBlank() ? UUID.fromString(id) : null;
     }
 }

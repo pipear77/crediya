@@ -18,9 +18,9 @@ public class TipoPrestamoEntity {
     @Id
     private UUID id;
     private String nombre;
-    private BigDecimal minMonto;
-    private BigDecimal maxMonto;
-    private Double ratioInteres;
-    private Boolean aprobacion;
+    private BigDecimal montoMinimo;
+    private BigDecimal montoMaximo;
+    private Double tasaInteres;
+    private Boolean aprobacionAutomatica;
 
 }

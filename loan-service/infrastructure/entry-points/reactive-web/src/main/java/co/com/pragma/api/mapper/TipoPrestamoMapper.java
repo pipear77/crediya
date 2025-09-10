@@ -13,9 +13,19 @@ import java.util.UUID;
 public interface TipoPrestamoMapper {
 
     @Mapping(source = "id", target = "id", qualifiedByName = "stringToUuid")
+    @Mapping(source = "nombre", target = "nombre")
+    @Mapping(source = "montoMinimo", target = "montoMinimo")
+    @Mapping(source = "montoMaximo", target = "montoMaximo")
+    @Mapping(source = "tasaInteres", target = "tasaInteres")
+    @Mapping(source = "aprobacionAutomatica", target = "aprobacionAutomatica")
     TipoPrestamo toDomain(TipoPrestamoRequestDTO dto);
 
-    @Mapping(source = "id", target = "id", qualifiedByName = "uuidToString")
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "nombre", target = "nombre")
+    @Mapping(source = "montoMinimo", target = "montoMinimo")
+    @Mapping(source = "montoMaximo", target = "montoMaximo")
+    @Mapping(source = "tasaInteres", target = "tasaInteres")
+    @Mapping(source = "aprobacionAutomatica", target = "aprobacionAutomatica")
     TipoPrestamoResponseDTO toResponseDTO(TipoPrestamo domain);
 
     @Named("stringToUuid")

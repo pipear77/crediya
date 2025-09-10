@@ -18,13 +18,23 @@ CREATE TABLE tipo_prestamo (
 CREATE TABLE solicitud_prestamo (
     id UUID PRIMARY KEY,
     documento_identidad VARCHAR(15) NOT NULL,
+    correo VARCHAR(100), -- 📧 contacto del solicitante
+    nombre VARCHAR(100), -- 👤 nombre del solicitante
     monto_solicitado NUMERIC(20,2) NOT NULL,
     plazo_meses INTEGER NOT NULL,
     id_tipo_prestamo UUID NOT NULL,
+    tipo_prestamo VARCHAR(50), -- 🏦 nombre legible del tipo de préstamo
+    tasa_interes NUMERIC(5,2), -- 📈 interés aplicado
+    salario_base NUMERIC(20,2), -- 💰 ingreso base del solicitante
+    monto_mensual_solicitud NUMERIC(20,2), -- 📆 cuota mensual estimada
     estado VARCHAR(20) NOT NULL,
+    canal VARCHAR(100),
     fecha_creacion TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+    -- 🔗 Clave foránea
     CONSTRAINT fk_tipo_prestamo FOREIGN KEY (id_tipo_prestamo) REFERENCES tipo_prestamo(id)
 );
+
 
 -- Insertar datos en tipo_prestamo
 INSERT INTO tipo_prestamo (id, nombre, monto_minimo, monto_maximo, tasa_interes, aprobacion_automatica) VALUES

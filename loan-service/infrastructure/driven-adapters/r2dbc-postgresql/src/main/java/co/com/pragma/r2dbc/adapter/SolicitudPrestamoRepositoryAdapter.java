@@ -1,17 +1,21 @@
 package co.com.pragma.r2dbc.adapter;
 
+import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import co.com.pragma.model.solicitud.solicitudprestamos.Solicitud;
 import co.com.pragma.model.solicitud.solicitudprestamos.gateways.SolicitudRepository;
 import co.com.pragma.r2dbc.entity.SolicitudEntity;
 import co.com.pragma.r2dbc.helper.ReactiveAdapterOperations;
+import co.com.pragma.r2dbc.mapper.SolicitudEntityMapper;
 import co.com.pragma.r2dbc.repositories.ReactiveSolicitudRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.reactive.TransactionalOperator;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.UUID;
 
 import static co.com.pragma.r2dbc.common.Constantes.SOLICITUD_PRESTAMO_NOT_SAVED_ERROR_MSG;
@@ -29,10 +33,14 @@ public class SolicitudPrestamoRepositoryAdapter extends ReactiveAdapterOperation
 
     private final R2dbcEntityTemplate entityTemplate;
 
-    public SolicitudPrestamoRepositoryAdapter(ReactiveSolicitudRepository repository, ObjectMapper mapper, TransactionalOperator txOperator, R2dbcEntityTemplate entityTemplate) {
+    private final SolicitudEntityMapper solicitudMapper;
+
+
+    public SolicitudPrestamoRepositoryAdapter(ReactiveSolicitudRepository repository, ObjectMapper mapper, TransactionalOperator txOperator, R2dbcEntityTemplate entityTemplate, SolicitudEntityMapper solicitudMapper) {
         super(repository, mapper, d -> mapper.map(d, Solicitud.class));
         this.txOperator = txOperator;
         this.entityTemplate = entityTemplate;
+        this.solicitudMapper = solicitudMapper;
     }
 
     @Override
@@ -50,6 +58,21 @@ public class SolicitudPrestamoRepositoryAdapter extends ReactiveAdapterOperation
                     log.error("Error al guardar solicitud: {}", solicitud, e);
                     return Mono.error(new RuntimeException(SOLICITUD_PRESTAMO_NOT_SAVED_ERROR_MSG));
                 });
+    }
+
+    @Override
+    public Flux<Solicitud> listarSolicitudesParaRevision() {
+        List<EstadoSolicitud> estadosPermitidos = List.of(
+                EstadoSolicitud.PENDIENTE_REVISION,
+                EstadoSolicitud.RECHAZADA,
+                EstadoSolicitud.REVISION_MANUAL
+        );
+
+        log.info("🔍 Listando solicitudes en estados: {}", estadosPermitidos);
+
+        return repository.findByEstadoIn(estadosPermitidos)
+                .map(solicitudMapper::toDomain)
+                .doOnNext(s -> log.debug("➡️ Solicitud encontrada: {}", s));
     }
 
 }

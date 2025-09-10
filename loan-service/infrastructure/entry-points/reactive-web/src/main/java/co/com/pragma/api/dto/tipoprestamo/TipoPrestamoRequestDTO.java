@@ -18,19 +18,19 @@ public record TipoPrestamoRequestDTO(
         @NotNull
         @DecimalMin(value = "0.0", inclusive = false)
         @Schema(example = "1000000.00", description = "Monto mínimo permitido")
-        BigDecimal minMonto,
+        BigDecimal montoMinimo,
 
         @NotNull
         @DecimalMin(value = "0.0", inclusive = false)
         @Schema(example = "10000000.00", description = "Monto máximo permitido")
-        BigDecimal maxMonto,
+        BigDecimal montoMaximo,
 
         @NotNull
         @DecimalMin(value = "0.0", inclusive = false)
         @Schema(example = "0.015", description = "Ratio de interés aplicado")
-        Double ratioInteres,
+        Double tasaInteres,
 
         @NotNull
         @Schema(example = "true", description = "Indica si requiere aprobación manual")
-        Boolean aprobacion
+        Boolean aprobacionAutomatica
 ) {}

@@ -1,4 +1,5 @@
 package co.com.pragma.model.solicitud.solicitudprestamos;
+
 import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import lombok.*;
 
@@ -17,4 +18,13 @@ public class Solicitud {
     Integer plazoMeses;
     UUID idTipoPrestamo;
     EstadoSolicitud estado;
+
+    // Nuevos campos para HU4
+    String correo;
+    String nombre;
+    String tipoPrestamo; // nombre legible del tipo, no el UUID
+    Double tasaInteres;
+    BigDecimal salarioBase;
+    BigDecimal montoMensualSolicitud;
+    String canal;
 }
