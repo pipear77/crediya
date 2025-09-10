@@ -1,11 +1,9 @@
 package co.com.pragma.api.dto.solicitud;
 
-import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Schema(name = "SolicitudRequestDTO", description = "Datos para registrar una solicitud de préstamo")
 public record SolicitudRequestDTO(
@@ -16,25 +14,25 @@ public record SolicitudRequestDTO(
 
         @NotNull
         @DecimalMin(value = "0.0", inclusive = false)
-        @Schema(example = "5000000.00", description = "Monto solicitado")
+        @Schema(example = "5000000.00", description = "Monto solicitado en pesos colombianos")
         BigDecimal montoSolicitado,
 
         @NotNull
         @Min(1)
-        @Schema(example = "24", description = "Plazo en meses")
+        @Schema(example = "24", description = "Plazo del préstamo en meses")
         Integer plazoMeses,
 
         @NotBlank
-        @Schema(example = "uuid-tipo-prestamo-001", description = "ID del tipo de préstamo")
+        @Schema(example = "b3f1c2e4-9a2d-4d7e-8c3a-2a1f5e6d9f1a", description = "UUID del tipo de préstamo")
         String idTipoPrestamo,
 
         @NotNull
         @DecimalMin(value = "0.0", inclusive = true)
-        @Schema(example = "1000000.00", description = "Salario base del solicitante")
+        @Schema(example = "3500000.00", description = "Salario base del solicitante")
         BigDecimal salarioBase,
 
         @NotNull
         @DecimalMin(value = "0.0", inclusive = true)
-        @Schema(example = "0.19", description = "Tasa de interés aplicada")
+        @Schema(example = "1.5", description = "Tasa de interés aplicada al préstamo")
         Double tasaInteres
 ) {}

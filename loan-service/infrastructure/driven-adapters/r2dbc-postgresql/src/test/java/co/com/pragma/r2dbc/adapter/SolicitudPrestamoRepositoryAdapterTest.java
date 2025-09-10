@@ -31,7 +31,7 @@ class SolicitudPrestamoRepositoryAdapterTest {
     @BeforeEach
     void setUp() {
         repository = mock(ReactiveSolicitudRepository.class);
-        mapper = mock(ObjectMapper.class);
+        mapper = mock(ObjectMapper.class); // no usado directamente en guardar()
         txOperator = mock(TransactionalOperator.class);
         entityTemplate = mock(R2dbcEntityTemplate.class);
         solicitudMapper = mock(SolicitudEntityMapper.class);
@@ -41,50 +41,48 @@ class SolicitudPrestamoRepositoryAdapterTest {
 
     @Test
     void guardarSolicitud_exito() {
-        // Arrange
         UUID id = UUID.randomUUID();
         Solicitud solicitud = Solicitud.builder().id(id).documentoIdentidad("123456789").build();
         SolicitudEntity entity = SolicitudEntity.builder().id(id).documentoIdentidad("123456789").build();
         ReactiveInsertOperation.ReactiveInsert<SolicitudEntity> insertSpec = mock(ReactiveInsertOperation.ReactiveInsert.class);
 
-        when(mapper.map(solicitud, SolicitudEntity.class)).thenReturn(entity);
+        // ✅ Mock correcto del mapper usado en guardar()
+        when(solicitudMapper.toEntity(solicitud)).thenReturn(entity);
+        when(solicitudMapper.toDomain(entity)).thenReturn(solicitud);
+
         when(entityTemplate.insert(SolicitudEntity.class)).thenReturn(insertSpec);
         when(insertSpec.using(entity)).thenReturn(Mono.just(entity));
-        when(mapper.map(entity, Solicitud.class)).thenReturn(solicitud);
         when(txOperator.transactional(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // Act & Assert
         StepVerifier.create(adapter.guardar(solicitud))
                 .expectNextMatches(saved -> saved.getId().equals(id))
                 .verifyComplete();
 
-        verify(mapper).map(solicitud, SolicitudEntity.class);
+        verify(solicitudMapper).toEntity(solicitud);
         verify(entityTemplate).insert(SolicitudEntity.class);
         verify(insertSpec).using(entity);
         verify(txOperator).transactional(any(Mono.class));
-        verify(mapper).map(entity, Solicitud.class);
+        verify(solicitudMapper).toDomain(entity);
     }
 
     @Test
     void guardarSolicitud_error() {
-        // Arrange
         UUID id = UUID.randomUUID();
         Solicitud solicitud = Solicitud.builder().id(id).build();
         SolicitudEntity entity = SolicitudEntity.builder().id(id).build();
         ReactiveInsertOperation.ReactiveInsert<SolicitudEntity> insertSpec = mock(ReactiveInsertOperation.ReactiveInsert.class);
 
-        when(mapper.map(solicitud, SolicitudEntity.class)).thenReturn(entity);
+        when(solicitudMapper.toEntity(solicitud)).thenReturn(entity);
         when(entityTemplate.insert(SolicitudEntity.class)).thenReturn(insertSpec);
         when(insertSpec.using(entity)).thenReturn(Mono.error(new RuntimeException("DB error")));
         when(txOperator.transactional(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        // Act & Assert
         StepVerifier.create(adapter.guardar(solicitud))
                 .expectErrorMatches(e -> e instanceof RuntimeException &&
                         e.getMessage().equals(SOLICITUD_PRESTAMO_NOT_SAVED_ERROR_MSG))
                 .verify();
 
-        verify(mapper).map(solicitud, SolicitudEntity.class);
+        verify(solicitudMapper).toEntity(solicitud);
         verify(entityTemplate).insert(SolicitudEntity.class);
         verify(insertSpec).using(entity);
         verify(txOperator).transactional(any(Mono.class));

@@ -1,4 +1,3 @@
-/*
 package co.com.pragma.api;
 
 import co.com.pragma.api.dto.solicitud.SolicitudRequestDTO;
@@ -8,6 +7,8 @@ import co.com.pragma.api.helper.TokenExtractor;
 import co.com.pragma.api.mapper.SolicitudApiMapper;
 import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import co.com.pragma.model.solicitud.solicitudprestamos.Solicitud;
+import co.com.pragma.usecase.solicitarprestamo.ActualizarEstadoSolicitudUseCaseInterface;
+import co.com.pragma.usecase.solicitarprestamo.ListarSolicitudesParaRevisionUseCaseInterface;
 import co.com.pragma.usecase.solicitarprestamo.SolicitarPrestamoUseCase;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +52,14 @@ class RouterRestTest {
     @MockBean
     private TokenExtractor tokenExtractor;
 
+    @MockBean
+    private ListarSolicitudesParaRevisionUseCaseInterface listarUseCase;
+
+    @MockBean
+    private ActualizarEstadoSolicitudUseCaseInterface actualizarEstadoSolicitudUseCase;
+
+
+
     private SolicitudRequestDTO requestDTO;
     private Solicitud solicitud;
     private SolicitudResponseDTO responseDTO;
@@ -59,45 +68,54 @@ class RouterRestTest {
     void setup() {
         UUID solicitudId = UUID.randomUUID();
         UUID tipoPrestamoId = UUID.randomUUID();
-        UUID usuarioId = UUID.randomUUID(); // ✅ ID necesario para evitar NullPointerException
+        UUID usuarioId = UUID.randomUUID();
         String documentoIdentidad = "123456789";
-        Double tasa_interes = 0.15;
-
+        String correo = "cristiano@gmail.com";
+        String nombre = "Cristiano Ronaldo";
+        String canal = "APP_WEB";
+        BigDecimal montoSolicitado = new BigDecimal("5000000.00");
+        Integer plazoMeses = 24;
+        BigDecimal salarioBase = new BigDecimal("1000000.00");
+        BigDecimal montoMensual = new BigDecimal("250000.00");
+        Double tasaInteres = 0.15;
 
         requestDTO = new SolicitudRequestDTO(
-                "123456789",                         // documentoIdentidad
-                "cristiano@gmail.com",              // email
-                "Cristiano Ronaldo",                // nombre
-                "APP_WEB",                          // canal
-                new BigDecimal("5000000.00"),       // montoSolicitado
-                24,                                 // plazoMeses
-                "uuid-tipo-prestamo-001",           // idTipoPrestamo
-                new BigDecimal("1000000.00"),       // salarioBase
-                new BigDecimal("250000.00"),        // montoMensualSolicitud
-                tasa_interes
+                canal,
+                montoSolicitado,
+                plazoMeses,
+                tipoPrestamoId.toString(),
+                salarioBase,
+                tasaInteres
         );
 
         solicitud = Solicitud.builder()
                 .id(solicitudId)
                 .documentoIdentidad(documentoIdentidad)
-                .montoSolicitado(requestDTO.montoSolicitado())
-                .plazoMeses(requestDTO.plazoMeses())
+                .correo(correo)
+                .nombre(nombre)
+                .canal(canal)
+                .montoSolicitado(montoSolicitado)
+                .plazoMeses(plazoMeses)
                 .idTipoPrestamo(tipoPrestamoId)
+                .salarioBase(salarioBase)
+                .montoMensualSolicitud(montoMensual)
+                .tasaInteres(tasaInteres)
+                .estado(EstadoSolicitud.PENDIENTE_REVISION)
                 .build();
 
         responseDTO = new SolicitudResponseDTO(
                 solicitudId.toString(),
                 documentoIdentidad,
-                requestDTO.email(),
-                requestDTO.nombre(),
-                requestDTO.canal(),
-                requestDTO.montoSolicitado(),
-                requestDTO.plazoMeses(),
-                requestDTO.idTipoPrestamo(),
-                "Crédito Educativo", // ✅ tipoTramite asignado internamente
-                requestDTO.salarioBase(),
-                requestDTO.montoMensualSolicitud(),
-                requestDTO.tasaInteres(),
+                correo,
+                nombre,
+                canal,
+                montoSolicitado,
+                plazoMeses,
+                tipoPrestamoId.toString(),
+                "Crédito Educativo",
+                salarioBase,
+                montoMensual,
+                tasaInteres,
                 EstadoSolicitud.PENDIENTE_REVISION
         );
 
@@ -106,11 +124,14 @@ class RouterRestTest {
         when(tokenExtractor.extractUsuario(any(String.class)))
                 .thenReturn(Mono.just(
                         UsuarioAutenticadoDTO.builder()
-                                .id(usuarioId.toString()) // ✅ ahora sí tiene ID
+                                .id(usuarioId.toString())
                                 .documentoIdentidad(documentoIdentidad)
+                                .correo(correo)
+                                .nombres(nombre)
                                 .rol("ROL_CLIENTE")
                                 .estado("ACTIVO")
                                 .sesionActiva(true)
+                                .salarioBase(salarioBase)
                                 .build()
                 ));
 
@@ -119,10 +140,8 @@ class RouterRestTest {
         when(mapper.toResponseDTO(solicitud)).thenReturn(responseDTO);
     }
 
-
-   */
-/* @Test
-    @DisplayName("POST /api/v1/solicitudes should return 201 Created with response body")
+    @Test
+    @DisplayName("✅ POST /api/v1/solicitudes debe retornar 201 con cuerpo de respuesta")
     void shouldCreateSolicitudSuccessfully() {
         webTestClient.post()
                 .uri("/api/v1/solicitudes")
@@ -135,10 +154,21 @@ class RouterRestTest {
                 .expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
                 .expectBody(SolicitudResponseDTO.class)
                 .value(resp -> {
-                    assert resp.id().equals(solicitud.getId().toString());
-                    assert resp.documentoIdentidad().equals(solicitud.getDocumentoIdentidad());
+                    // Validaciones explícitas con mensajes claros
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.id(), resp.id(), "ID no coincide");
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.documentoIdentidad(), resp.documentoIdentidad(), "Documento no coincide");
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.correo(), resp.correo(), "Correo no coincide");
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.nombre(), resp.nombre(), "Nombre no coincide");
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.canal(), resp.canal(), "Canal no coincide");
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.montoSolicitado(), resp.montoSolicitado(), "Monto solicitado no coincide");
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.plazoMeses(), resp.plazoMeses(), "Plazo no coincide");
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.idTipoPrestamo(), resp.idTipoPrestamo(), "ID tipo préstamo no coincide");
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.tipoTramite(), resp.tipoTramite(), "Tipo trámite no coincide");
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.salarioBase(), resp.salarioBase(), "Salario base no coincide");
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.montoMensualSolicitud(), resp.montoMensualSolicitud(), "Monto mensual no coincide");
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.tasaInteres(), resp.tasaInteres(), "Tasa de interés no coincide");
+                    org.junit.jupiter.api.Assertions.assertEquals(responseDTO.estado(), resp.estado(), "Estado no coincide");
                 });
-    }*//*
+    }
 
 }
-*/

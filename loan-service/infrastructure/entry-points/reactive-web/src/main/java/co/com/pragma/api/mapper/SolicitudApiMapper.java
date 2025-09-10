@@ -14,9 +14,9 @@ public interface SolicitudApiMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(source = "idTipoPrestamo", target = "idTipoPrestamo", qualifiedByName = "stringToUUID")
+    @Mapping(target = "tipoPrestamo", ignore = true) // se asigna en el UseCase
     Solicitud toDomain(SolicitudRequestDTO dto);
 
-    // ✅ Mapeo completo para el DTO de salida
     @Mapping(source = "id", target = "id", qualifiedByName = "uuidToString")
     @Mapping(source = "documentoIdentidad", target = "documentoIdentidad")
     @Mapping(source = "correo", target = "correo")
@@ -29,7 +29,7 @@ public interface SolicitudApiMapper {
     @Mapping(source = "montoMensualSolicitud", target = "montoMensualSolicitud")
     @Mapping(source = "tasaInteres", target = "tasaInteres")
     @Mapping(source = "estado", target = "estado")
-    @Mapping(source = "tipoPrestamo", target = "tipoTramite") // se asigna internamente en el UseCase
+    @Mapping(source = "tipoPrestamo", target = "tipoTramite")
     SolicitudResponseDTO toResponseDTO(Solicitud solicitud);
 
     @Named("uuidToString")

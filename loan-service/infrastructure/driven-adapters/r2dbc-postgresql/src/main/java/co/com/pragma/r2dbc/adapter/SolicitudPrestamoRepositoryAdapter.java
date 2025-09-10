@@ -30,36 +30,54 @@ public class SolicitudPrestamoRepositoryAdapter extends ReactiveAdapterOperation
         > implements SolicitudRepository {
 
     private final TransactionalOperator txOperator;
-
     private final R2dbcEntityTemplate entityTemplate;
-
     private final SolicitudEntityMapper solicitudMapper;
 
-
-    public SolicitudPrestamoRepositoryAdapter(ReactiveSolicitudRepository repository, ObjectMapper mapper, TransactionalOperator txOperator, R2dbcEntityTemplate entityTemplate, SolicitudEntityMapper solicitudMapper) {
-        super(repository, mapper, d -> mapper.map(d, Solicitud.class));
+    public SolicitudPrestamoRepositoryAdapter(ReactiveSolicitudRepository repository,
+                                              ObjectMapper mapper,
+                                              TransactionalOperator txOperator,
+                                              R2dbcEntityTemplate entityTemplate,
+                                              SolicitudEntityMapper solicitudMapper) {
+        super(repository, mapper, solicitudMapper::toDomain);
         this.txOperator = txOperator;
         this.entityTemplate = entityTemplate;
         this.solicitudMapper = solicitudMapper;
     }
 
+    /**
+     * Persiste una nueva solicitud en la base de datos.
+     *
+     * @param solicitud modelo de dominio
+     * @return solicitud persistida
+     */
     @Override
     public Mono<Solicitud> guardar(Solicitud solicitud) {
-        log.info("Guardando solicitud: {}", solicitud);
+        log.info("📥 Guardando solicitud con ID: {}", solicitud.getId());
+        log.info("📩 Correo en modelo Solicitud: {}", solicitud.getCorreo());
 
-        SolicitudEntity entity = mapper.map(solicitud, SolicitudEntity.class);
+        SolicitudEntity entity = solicitudMapper.toEntity(solicitud);
+        logEntityTrace(entity);
 
-        return txOperator.transactional(
+        return Mono.defer(() ->
+                txOperator.transactional(
                         entityTemplate.insert(SolicitudEntity.class)
                                 .using(entity)
-                                .map(saved -> mapper.map(saved, Solicitud.class))
-                ).doOnNext(saved -> log.info("Solicitud guardada: {}", saved))
-                .onErrorResume(e -> {
-                    log.error("Error al guardar solicitud: {}", solicitud, e);
-                    return Mono.error(new RuntimeException(SOLICITUD_PRESTAMO_NOT_SAVED_ERROR_MSG));
-                });
+                                .map(solicitudMapper::toDomain)
+                )
+        ).doOnNext(saved -> {
+            log.info("✅ Solicitud guardada con ID: {}", saved.getId());
+            log.info("📩 Correo persistido en modelo: {}", saved.getCorreo());
+        }).onErrorResume(e -> {
+            log.error("❌ Error al guardar solicitud con ID: {}", solicitud.getId(), e);
+            return Mono.error(new RuntimeException(SOLICITUD_PRESTAMO_NOT_SAVED_ERROR_MSG));
+        });
     }
 
+    /**
+     * Lista todas las solicitudes que están en estados revisables.
+     *
+     * @return flujo de solicitudes en estado pendiente, rechazada o revisión manual
+     */
     @Override
     public Flux<Solicitud> listarSolicitudesParaRevision() {
         List<EstadoSolicitud> estadosPermitidos = List.of(
@@ -68,11 +86,36 @@ public class SolicitudPrestamoRepositoryAdapter extends ReactiveAdapterOperation
                 EstadoSolicitud.REVISION_MANUAL
         );
 
-        log.info("🔍 Listando solicitudes en estados: {}", estadosPermitidos);
+        log.info("🔍 Listando solicitudes en estados permitidos: {}", estadosPermitidos);
 
         return repository.findByEstadoIn(estadosPermitidos)
                 .map(solicitudMapper::toDomain)
-                .doOnNext(s -> log.debug("➡️ Solicitud encontrada: {}", s));
+                .doOnNext(s -> {
+                    log.debug("➡️ Solicitud encontrada con ID: {} - Estado: {}", s.getId(), s.getEstado());
+                    log.debug("📩 Correo en solicitud listada: {}", s.getCorreo());
+                });
     }
 
+    @Override
+    public Mono<Solicitud> buscarPorId(UUID id) {
+        log.info("🔍 Buscando solicitud por ID: {}", id);
+        return repository.findById(id)
+                .map(solicitudMapper::toDomain)
+                .doOnNext(s -> log.debug("✅ Solicitud encontrada: {} - Estado: {}", s.getId(), s.getEstado()))
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.warn("⚠️ Solicitud no encontrada con ID: {}", id);
+                    return Mono.empty();
+                }));
+    }
+
+
+    private void logEntityTrace(SolicitudEntity entity) {
+        log.info("📦 Entidad mapeada para persistencia:");
+        log.info("   ➤ ID: {}", entity.getId());
+        log.info("   ➤ Documento: {}", entity.getDocumentoIdentidad());
+        log.info("   ➤ Correo: {}", entity.getCorreo());
+        log.info("   ➤ Nombre: {}", entity.getNombre());
+        log.info("   ➤ Canal: {}", entity.getCanal());
+        log.info("   ➤ Estado: {}", entity.getEstado());
+    }
 }

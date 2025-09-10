@@ -4,7 +4,9 @@ import co.com.pragma.api.RouterRest;
 import co.com.pragma.api.SolicitudHandler;
 import co.com.pragma.api.helper.TokenExtractor;
 import co.com.pragma.api.mapper.SolicitudApiMapper;
+import co.com.pragma.usecase.solicitarprestamo.ActualizarEstadoSolicitudUseCaseInterface;
 import co.com.pragma.usecase.solicitarprestamo.ListarSolicitudesParaRevisionUseCase;
+import co.com.pragma.usecase.solicitarprestamo.ListarSolicitudesParaRevisionUseCaseInterface;
 import co.com.pragma.usecase.solicitarprestamo.SolicitarPrestamoUseCase;
 import jakarta.validation.Validator;
 import org.springframework.context.annotation.Bean;
@@ -21,11 +23,11 @@ public class TestApplicationConfig {
 
     @Bean
     public SolicitudHandler solicitudHandler(SolicitarPrestamoUseCase solicitarUseCase,
-                                             ListarSolicitudesParaRevisionUseCase listarUseCase,
+                                             ListarSolicitudesParaRevisionUseCaseInterface listarUseCase,
                                              SolicitudApiMapper mapper,
                                              Validator validator,
-                                             TokenExtractor tokenExtractor) {
-        return new SolicitudHandler(solicitarUseCase, listarUseCase, mapper, validator, tokenExtractor);
+                                             TokenExtractor tokenExtractor, ActualizarEstadoSolicitudUseCaseInterface actualizarUseCase) {
+        return new SolicitudHandler(solicitarUseCase, listarUseCase, mapper, validator, tokenExtractor, actualizarUseCase);
     }
 
 

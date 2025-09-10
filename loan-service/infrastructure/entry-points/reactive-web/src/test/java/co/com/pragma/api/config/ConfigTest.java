@@ -1,4 +1,3 @@
-/*
 package co.com.pragma.api.config;
 
 import co.com.pragma.api.RouterRest;
@@ -10,6 +9,7 @@ import co.com.pragma.api.helper.TokenExtractor;
 import co.com.pragma.api.mapper.SolicitudApiMapper;
 import co.com.pragma.model.solicitud.enums.EstadoSolicitud;
 import co.com.pragma.model.solicitud.solicitudprestamos.Solicitud;
+import co.com.pragma.usecase.solicitarprestamo.ActualizarEstadoSolicitudUseCaseInterface;
 import co.com.pragma.usecase.solicitarprestamo.SolicitarPrestamoUseCase;
 import co.com.pragma.usecase.solicitarprestamo.ListarSolicitudesParaRevisionUseCaseInterface;
 import jakarta.validation.Validator;
@@ -56,6 +56,10 @@ class ConfigTest {
     @MockBean
     private TokenExtractor tokenExtractor;
 
+    @MockBean
+    private ActualizarEstadoSolicitudUseCaseInterface actualizarEstadoSolicitudUseCase;
+
+
     private SolicitudRequestDTO requestDTO;
     private Solicitud domain;
     private SolicitudResponseDTO responseDTO;
@@ -66,45 +70,51 @@ class ConfigTest {
         UUID tipoPrestamoId = UUID.randomUUID();
         UUID usuarioId = UUID.randomUUID();
         String documentoIdentidad = "123456789";
-        Double tasa_interes = 0.15;
+        String canal = "APP_WEB";
+        BigDecimal montoSolicitado = new BigDecimal("5000000.00");
+        Integer plazoMeses = 24;
+        BigDecimal salarioBase = new BigDecimal("3500000.00");
+        Double tasaInteres = 1.5;
 
         requestDTO = new SolicitudRequestDTO(
-                documentoIdentidad,
-                new BigDecimal("5000000.00"),
-                24,
+                canal,
+                montoSolicitado,
+                plazoMeses,
                 tipoPrestamoId.toString(),
-                new BigDecimal("1000000.00"),
-                tasa_interes
+                salarioBase,
+                tasaInteres
         );
 
         domain = Solicitud.builder()
                 .id(solicitudId)
                 .documentoIdentidad(documentoIdentidad)
-                .canal(requestDTO.canal())
-                .montoSolicitado(requestDTO.montoSolicitado())
-                .plazoMeses(requestDTO.plazoMeses())
-                .idTipoPrestamo(UUID.fromString(requestDTO.idTipoPrestamo()))
-                .salarioBase(requestDTO.salarioBase())
-                .montoMensualSolicitud(requestDTO.montoSolicitado())
-                .tasaInteres(requestDTO.tasaInteres())
+                .canal(canal)
+                .montoSolicitado(montoSolicitado)
+                .plazoMeses(plazoMeses)
+                .idTipoPrestamo(tipoPrestamoId)
+                .salarioBase(salarioBase)
+                .montoMensualSolicitud(new BigDecimal("208333.33"))
+                .tasaInteres(tasaInteres)
+                .correo("arcila@example.com")
+                .nombre("Ana Arcila")
+                .estado(EstadoSolicitud.PENDIENTE_REVISION)
                 .build();
 
         responseDTO = new SolicitudResponseDTO(
                 solicitudId.toString(),
                 documentoIdentidad,
-                requestDTO.canal(),
-                requestDTO.montoSolicitado(),
-                requestDTO.plazoMeses(),
-                requestDTO.idTipoPrestamo(),
+                "arcila@example.com",
+                "Ana Arcila",
+                canal,
+                montoSolicitado,
+                plazoMeses,
+                tipoPrestamoId.toString(),
                 "Crédito Educativo",
-                requestDTO.salarioBase(),
-                requestDTO.montoMensualSolicitud(),
-                requestDTO.tasaInteres(),
+                salarioBase,
+                new BigDecimal("208333.33"),
+                tasaInteres,
                 EstadoSolicitud.PENDIENTE_REVISION
         );
-
-
-
 
         when(validator.validate(any(SolicitudRequestDTO.class))).thenReturn(Collections.emptySet());
 
@@ -113,9 +123,13 @@ class ConfigTest {
                         UsuarioAutenticadoDTO.builder()
                                 .id(usuarioId.toString())
                                 .documentoIdentidad(documentoIdentidad)
+                                .correo("arcila@example.com")
+                                .nombres("Ana")
+                                .apellidos("Arcila")
                                 .rol("ROL_CLIENTE")
                                 .estado("ACTIVO")
                                 .sesionActiva(true)
+                                .salarioBase(salarioBase)
                                 .build()
                 ));
 
@@ -125,7 +139,7 @@ class ConfigTest {
     }
 
     @Test
-    void corsConfigurationShouldAllowOrigins() {
+    void debePermitirCORSYRetornarHeadersDeSeguridad() {
         webTestClient.post()
                 .uri("/api/v1/solicitudes")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer fake-token")
@@ -142,4 +156,3 @@ class ConfigTest {
                 .expectHeader().valueEquals("Referrer-Policy", "strict-origin-when-cross-origin");
     }
 }
-*/

@@ -1,5 +1,6 @@
 package co.com.pragma.api;
 
+import co.com.pragma.api.dto.solicitud.ActualizarEstadoSolicitudDTO;
 import co.com.pragma.api.dto.solicitud.SolicitudRequestDTO;
 import co.com.pragma.api.dto.solicitud.SolicitudResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -83,10 +84,50 @@ public class RouterRest {
                                     )
                             }
                     )
+            ),
+            @RouterOperation(
+                    path = "/api/v1/solicitudes/{id}/estado",
+                    method = RequestMethod.PATCH,
+                    produces = MediaType.APPLICATION_JSON_VALUE,
+                    consumes = MediaType.APPLICATION_JSON_VALUE,
+                    beanClass = SolicitudHandler.class,
+                    beanMethod = "actualizarEstado",
+                    operation = @Operation(
+                            operationId = "actualizarEstadoSolicitud",
+                            summary = "Actualizar el estado de una solicitud de préstamo",
+                            requestBody = @RequestBody(
+                                    required = true,
+                                    content = @Content(
+                                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                            schema = @Schema(implementation = ActualizarEstadoSolicitudDTO.class)
+                                    )
+                            ),
+                            responses = {
+                                    @ApiResponse(
+                                            responseCode = "200",
+                                            description = "Estado actualizado exitosamente",
+                                            content = @Content(
+                                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                                    schema = @Schema(implementation = SolicitudResponseDTO.class)
+                                            )
+                                    ),
+                                    @ApiResponse(
+                                            responseCode = "403",
+                                            description = "Acceso denegado",
+                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+                                    ),
+                                    @ApiResponse(
+                                            responseCode = "404",
+                                            description = "Solicitud no encontrada",
+                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
+                                    )
+                            }
+                    )
             )
     })
     public RouterFunction<ServerResponse> routerFunction(SolicitudHandler handler) {
         return route(POST("/api/v1/solicitudes"), handler::save)
-                .andRoute(GET("/api/v1/solicitudes"), handler::listar);
+                .andRoute(GET("/api/v1/solicitudes"), handler::listar)
+                .andRoute(PATCH("/api/v1/solicitudes/{id}/estado"), handler::actualizarEstado);
     }
 }
