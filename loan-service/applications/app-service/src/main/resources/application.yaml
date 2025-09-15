@@ -4,9 +4,11 @@ server:
     include-message: always
 spring:
   application:
-    name: "loan-service"
-    #devtools:
-    #add-properties: false
+    name: loan-service
+    r2dbc:
+      url: r2dbc:postgresql://loan-db:5432/loan_db
+      username: postgres
+      password: 1234
   h2:
     console:
       enabled: true
@@ -49,3 +51,7 @@ security:
   jwt:
     secret: YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXo1Njc4OTAxMjM0NTY3ODkwMTIzNDU2
     expiration: 3600000 # 1 hora en milisegundos
+
+# Comunicación con user-service
+user-service:
+  url: http://user-service:8080

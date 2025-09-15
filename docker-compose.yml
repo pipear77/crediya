@@ -1,58 +1,75 @@
-version: '3.8'
-
+version: "3.9"
 services:
-
-  postgres-loan:
-    image: postgres:15
-    container_name: loan-db
-    environment:
-      POSTGRES_DB: loan_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-    ports:
-      - "5433:5432"
-    volumes:
-      - loan-data:/var/lib/postgresql/data
-    networks:
-      - crediya-net
-
-  postgres-user:
-    image: postgres:15
+  # --- Base de datos de autenticación ---
+  user-db:
+    image: postgres:16
     container_name: user-db
+    restart: always
     environment:
       POSTGRES_DB: auth_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 1234
     ports:
+      - "5433:5432"
+    volumes:
+      - user_data:/var/lib/postgresql/data
+    networks:
+      - micro_net
+
+  # --- Base de datos de solicitudes ---
+  loan-db:
+    image: postgres:16
+    container_name: loan-db
+    restart: always
+    environment:
+      POSTGRES_DB: loan_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
       - "5434:5432"
     volumes:
-      - user-data:/var/lib/postgresql/data
+      - loan_data:/var/lib/postgresql/data
     networks:
-      - crediya-net
+      - micro_net
 
-  loan-service:
-    build: ./loan-service
-    container_name: loan-service
-    ports:
-      - "8081:8081"
-    depends_on:
-      - postgres-loan
-    networks:
-      - crediya-net
-
+  # --- Servicio de autenticación ---
   user-service:
     build: ./user-service
     container_name: user-service
-    ports:
-      - "8082:8082"
     depends_on:
-      - postgres-user
+      - user-db
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_R2DBC_URL: r2dbc:postgresql://user-db:5432/auth_db
+      SPRING_R2DBC_USERNAME: postgres
+      SPRING_R2DBC_PASSWORD: 1234
+    ports:
+      - "8080:8080"
     networks:
-      - crediya-net
+      - micro_net
 
-volumes:
-  loan-data:
-  user-data:
+  # --- Servicio de solicitudes ---
+  loan-service:
+    build: ./loan-service
+    container_name: loan-service
+    depends_on:
+      - loan-db
+      - user-service
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_R2DBC_URL: r2dbc:postgresql://loan-db:5432/loan_db
+      SPRING_R2DBC_USERNAME: postgres
+      SPRING_R2DBC_PASSWORD: 1234
+      USER_SERVICE_URL: http://user-service:8081
+    ports:
+      - "8081:8081"
+    networks:
+      - micro_net
 
 networks:
-  crediya-net:
+  micro_net:
+    driver: bridge
+
+volumes:
+  user_data:
+  loan_data:
