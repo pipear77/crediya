@@ -14,8 +14,14 @@ public interface SolicitudApiMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(source = "idTipoPrestamo", target = "idTipoPrestamo", qualifiedByName = "stringToUUID")
-    @Mapping(target = "tipoPrestamo", ignore = true) // se asigna en el UseCase
+    @Mapping(target = "tipoPrestamo", ignore = true)
+    @Mapping(target = "documentoIdentidad", ignore = true)
+    @Mapping(target = "estado", ignore = true)
+    @Mapping(target = "correo", ignore = true)
+    @Mapping(target = "nombre", ignore = true)
+    @Mapping(target = "montoMensualSolicitud", ignore = true)
     Solicitud toDomain(SolicitudRequestDTO dto);
+
 
     @Mapping(source = "id", target = "id", qualifiedByName = "uuidToString")
     @Mapping(source = "documentoIdentidad", target = "documentoIdentidad")

@@ -50,7 +50,7 @@ public class SolicitarPrestamoUseCase implements SolicitarPrestamoUseCaseInterfa
                                     tipo.getMontoMinimo() == null ||
                                     tipo.getMontoMaximo() == null) {
                                 return Mono.error(new ValidacionCampoException(
-                                        "No se puede validar el monto solicitado porque falta información financiera del tipo de préstamo",
+                                        ERROR_VALIDACION_MONTO,
                                         CodigosEstadoHttp.BAD_REQUEST.getCode()
                                 ));
                             }

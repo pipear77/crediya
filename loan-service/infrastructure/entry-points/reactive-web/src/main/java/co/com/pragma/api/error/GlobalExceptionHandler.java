@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.reactive.resource.NoResourceFoundException;
 
 @Slf4j
 @ControllerAdvice
@@ -47,8 +48,21 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ProblemDetail handleStaticResourceNotFound(NoResourceFoundException ex) {
+        log.warn("Recurso estático no encontrado: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setTitle("Recurso no encontrado");
+        problem.setDetail("El recurso solicitado no existe.");
+        return problem;
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
+        // Evita capturar errores de recursos estáticos como 500
+        if (ex instanceof NoResourceFoundException) {
+            return null; // deja que WebFlux lo maneje como 404
+        }
         log.error("Error inesperado: {}", ex.getMessage(), ex);
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problem.setTitle("Error inesperado");

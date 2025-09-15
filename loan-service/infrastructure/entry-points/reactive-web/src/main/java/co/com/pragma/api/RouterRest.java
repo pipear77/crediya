@@ -4,6 +4,8 @@ import co.com.pragma.api.dto.solicitud.ActualizarEstadoSolicitudDTO;
 import co.com.pragma.api.dto.solicitud.SolicitudRequestDTO;
 import co.com.pragma.api.dto.solicitud.SolicitudResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -17,19 +19,25 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import static org.springframework.web.reactive.function.server.RequestPredicates.*;
+import static org.springframework.web.reactive.function.server.RequestPredicates.accept;
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import static org.springframework.web.reactive.function.server.RequestPredicates.PATCH;
+import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
 public class RouterRest {
 
+    private static final String BASE_PATH = "/api/v1/solicitudes";
+    private static final String MEDIA_JSON = MediaType.APPLICATION_JSON_VALUE;
+
     @Bean
     @RouterOperations({
             @RouterOperation(
-                    path = "/api/v1/solicitudes",
+                    path = BASE_PATH,
                     method = RequestMethod.POST,
-                    produces = MediaType.APPLICATION_JSON_VALUE,
-                    consumes = MediaType.APPLICATION_JSON_VALUE,
+                    produces = MEDIA_JSON,
+                    consumes = MEDIA_JSON,
                     beanClass = SolicitudHandler.class,
                     beanMethod = "save",
                     operation = @Operation(
@@ -37,97 +45,70 @@ public class RouterRest {
                             summary = "Registrar una solicitud de préstamo",
                             requestBody = @RequestBody(
                                     required = true,
-                                    content = @Content(
-                                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                            schema = @Schema(implementation = SolicitudRequestDTO.class)
-                                    )
+                                    content = @Content(mediaType = MEDIA_JSON,
+                                            schema = @Schema(implementation = SolicitudRequestDTO.class))
                             ),
                             responses = {
-                                    @ApiResponse(
-                                            responseCode = "201",
-                                            description = "Solicitud creada exitosamente",
-                                            content = @Content(
-                                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                                    schema = @Schema(implementation = SolicitudResponseDTO.class)
-                                            )
-                                    ),
-                                    @ApiResponse(
-                                            responseCode = "400",
-                                            description = "Solicitud inválida",
-                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
-                                    )
+                                    @ApiResponse(responseCode = "201", description = "Solicitud creada exitosamente",
+                                            content = @Content(mediaType = MEDIA_JSON,
+                                                    schema = @Schema(implementation = SolicitudResponseDTO.class))),
+                                    @ApiResponse(responseCode = "400", description = "Solicitud inválida")
                             }
                     )
             ),
             @RouterOperation(
-                    path = "/api/v1/solicitudes",
+                    path = BASE_PATH,
                     method = RequestMethod.GET,
-                    produces = MediaType.APPLICATION_JSON_VALUE,
+                    produces = MEDIA_JSON,
                     beanClass = SolicitudHandler.class,
                     beanMethod = "listar",
                     operation = @Operation(
                             operationId = "listarSolicitudes",
                             summary = "Listar solicitudes para revisión manual",
                             responses = {
-                                    @ApiResponse(
-                                            responseCode = "200",
-                                            description = "Listado exitoso",
-                                            content = @Content(
-                                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                                    schema = @Schema(implementation = SolicitudResponseDTO.class)
-                                            )
-                                    ),
-                                    @ApiResponse(
-                                            responseCode = "403",
-                                            description = "Acceso denegado",
-                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
-                                    )
+                                    @ApiResponse(responseCode = "200", description = "Listado exitoso",
+                                            content = @Content(mediaType = MEDIA_JSON,
+                                                    schema = @Schema(implementation = SolicitudResponseDTO.class))),
+                                    @ApiResponse(responseCode = "403", description = "Acceso denegado")
                             }
                     )
             ),
             @RouterOperation(
-                    path = "/api/v1/solicitudes/{id}/estado",
+                    path = BASE_PATH + "/{id}/estado",
                     method = RequestMethod.PATCH,
-                    produces = MediaType.APPLICATION_JSON_VALUE,
-                    consumes = MediaType.APPLICATION_JSON_VALUE,
                     beanClass = SolicitudHandler.class,
                     beanMethod = "actualizarEstado",
                     operation = @Operation(
                             operationId = "actualizarEstadoSolicitud",
                             summary = "Actualizar el estado de una solicitud de préstamo",
+                            parameters = {
+                                    @Parameter(
+                                            name = "id",
+                                            description = "ID de la solicitud de préstamo",
+                                            required = true,
+                                            in = ParameterIn.PATH,
+                                            schema = @Schema(type = "string", format = "uuid")
+                                    )
+                            },
                             requestBody = @RequestBody(
                                     required = true,
-                                    content = @Content(
-                                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                            schema = @Schema(implementation = ActualizarEstadoSolicitudDTO.class)
-                                    )
+                                    content = @Content(mediaType = MEDIA_JSON,
+                                            schema = @Schema(implementation = ActualizarEstadoSolicitudDTO.class))
                             ),
                             responses = {
-                                    @ApiResponse(
-                                            responseCode = "200",
-                                            description = "Estado actualizado exitosamente",
-                                            content = @Content(
-                                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                                    schema = @Schema(implementation = SolicitudResponseDTO.class)
-                                            )
-                                    ),
-                                    @ApiResponse(
-                                            responseCode = "403",
-                                            description = "Acceso denegado",
-                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
-                                    ),
-                                    @ApiResponse(
-                                            responseCode = "404",
-                                            description = "Solicitud no encontrada",
-                                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)
-                                    )
+                                    @ApiResponse(responseCode = "200", description = "Estado actualizado exitosamente"),
+                                    @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
+                                    @ApiResponse(responseCode = "403", description = "Acceso denegado"),
+                                    @ApiResponse(responseCode = "404", description = "Solicitud no encontrada")
                             }
                     )
             )
     })
     public RouterFunction<ServerResponse> routerFunction(SolicitudHandler handler) {
-        return route(POST("/api/v1/solicitudes"), handler::save)
-                .andRoute(GET("/api/v1/solicitudes"), handler::listar)
-                .andRoute(PATCH("/api/v1/solicitudes/{id}/estado"), handler::actualizarEstado);
+        return route()
+                .POST(BASE_PATH, accept(MediaType.APPLICATION_JSON), handler::save)
+                .GET(BASE_PATH, accept(MediaType.APPLICATION_JSON), handler::listar)
+                .PATCH(BASE_PATH + "/{id}/estado", accept(MediaType.APPLICATION_JSON), handler::actualizarEstado)
+                .build();
     }
 }

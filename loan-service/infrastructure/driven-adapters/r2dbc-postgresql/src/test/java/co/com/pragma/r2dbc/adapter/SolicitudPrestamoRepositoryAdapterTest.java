@@ -2,6 +2,7 @@ package co.com.pragma.r2dbc.adapter;
 
 import co.com.pragma.model.solicitud.solicitudprestamos.Solicitud;
 import co.com.pragma.r2dbc.entity.SolicitudEntity;
+import co.com.pragma.r2dbc.exceptions.SolicitudPrestamoNoGuardadoException;
 import co.com.pragma.r2dbc.mapper.SolicitudEntityMapper;
 import co.com.pragma.r2dbc.repositories.ReactiveSolicitudRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,8 +79,8 @@ class SolicitudPrestamoRepositoryAdapterTest {
         when(txOperator.transactional(any(Mono.class))).thenAnswer(inv -> inv.getArgument(0));
 
         StepVerifier.create(adapter.guardar(solicitud))
-                .expectErrorMatches(e -> e instanceof RuntimeException &&
-                        e.getMessage().equals(SOLICITUD_PRESTAMO_NOT_SAVED_ERROR_MSG))
+                .expectErrorMatches(e -> e instanceof SolicitudPrestamoNoGuardadoException &&
+                        SOLICITUD_PRESTAMO_NOT_SAVED_ERROR_MSG.equals(e.getMessage()))
                 .verify();
 
         verify(solicitudMapper).toEntity(solicitud);
@@ -87,4 +88,6 @@ class SolicitudPrestamoRepositoryAdapterTest {
         verify(insertSpec).using(entity);
         verify(txOperator).transactional(any(Mono.class));
     }
+
+
 }

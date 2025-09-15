@@ -27,7 +27,7 @@ public class TestApplicationConfig {
                                              SolicitudApiMapper mapper,
                                              Validator validator,
                                              TokenExtractor tokenExtractor, ActualizarEstadoSolicitudUseCaseInterface actualizarUseCase) {
-        return new SolicitudHandler(solicitarUseCase, listarUseCase, mapper, validator, tokenExtractor, actualizarUseCase);
+        return new SolicitudHandler(solicitarUseCase, listarUseCase, actualizarUseCase , mapper, validator, tokenExtractor );
     }
 
 

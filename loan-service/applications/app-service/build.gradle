@@ -11,6 +11,9 @@ dependencies {
     testImplementation 'com.tngtech.archunit:archunit:1.4.1'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.2.0'
+
 }
 
 tasks.register('explodedJar', Copy) {
@@ -24,6 +27,7 @@ jar {
 }
 
 bootJar {
-    // Sets output jar name
-    archiveFileName = "${project.getParent().getName()}.${archiveExtension.get()}"
+    archiveFileName = "loan-service.jar"
 }
+
+
