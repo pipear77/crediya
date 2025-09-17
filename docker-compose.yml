@@ -1,75 +1,26 @@
-version: "3.9"
-services:
-  # --- Base de datos de autenticación ---
-  user-db:
-    image: postgres:16
-    container_name: user-db
-    restart: always
-    environment:
-      POSTGRES_DB: auth_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-    ports:
-      - "5433:5432"
-    volumes:
-      - user_data:/var/lib/postgresql/data
-    networks:
-      - micro_net
-
-  # --- Base de datos de solicitudes ---
-  loan-db:
-    image: postgres:16
-    container_name: loan-db
-    restart: always
-    environment:
-      POSTGRES_DB: loan_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-    ports:
-      - "5434:5432"
-    volumes:
-      - loan_data:/var/lib/postgresql/data
-    networks:
-      - micro_net
-
-  # --- Servicio de autenticación ---
   user-service:
-    build: ./user-service
-    container_name: user-service
-    depends_on:
-      - user-db
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_R2DBC_URL: r2dbc:postgresql://user-db:5432/auth_db
-      SPRING_R2DBC_USERNAME: postgres
-      SPRING_R2DBC_PASSWORD: 1234
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    volumes:
+      - ../user-service/applications/app-service/build/libs/user-service.jar:/app/user-service.jar
+    depends_on:
+      - auth-db
     networks:
-      - micro_net
+      - crediya-net
 
-  # --- Servicio de solicitudes ---
   loan-service:
-    build: ./loan-service
-    container_name: loan-service
+    build:
+      context: ./loan-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./loan-service/applications/app-service/build/libs/loan-service.jar:/app/loan-service.jar
     depends_on:
       - loan-db
       - user-service
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_R2DBC_URL: r2dbc:postgresql://loan-db:5432/loan_db
-      SPRING_R2DBC_USERNAME: postgres
-      SPRING_R2DBC_PASSWORD: 1234
-      USER_SERVICE_URL: http://user-service:8081
-    ports:
-      - "8081:8081"
     networks:
-      - micro_net
-
-networks:
-  micro_net:
-    driver: bridge
-
-volumes:
-  user_data:
-  loan_data:
+      - crediya-net
