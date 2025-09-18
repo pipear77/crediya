@@ -2,27 +2,23 @@ server:
   port: 8081
   error:
     include-message: always
+
 spring:
   application:
     name: loan-service
-    r2dbc:
-      url: r2dbc:postgresql://loan-db:5432/loan_db
-      username: postgres
-      password: 1234
-  h2:
-    console:
-      enabled: true
-      path: "/h2"
-  profiles:
-    include: null
+  r2dbc:
+    url: r2dbc:postgresql://loan-db:5432/loan_db
+    username: crediya
+    password: crediya
+
 adapters:
   r2dbc:
-    host: "localhost"
+    host: "loan-db"
     port: 5432
     database: "loan_db"
     schema: public
-    username: "postgres"
-    password: "1234"
+    username: "crediya"
+    password: "crediya"
 
 management:
   endpoints:
@@ -33,6 +29,7 @@ management:
     health:
       probes:
         enabled: true
+
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 
@@ -43,15 +40,12 @@ springdoc:
     path: /swagger-ui.html
     enable: true
 
+# Comunicación con user-service (usar el nombre del servicio en Docker Compose)
 external:
   user-service:
-    url: http://localhost:8080
+    url: http://user-service:8080
 
 security:
   jwt:
     secret: YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXo1Njc4OTAxMjM0NTY3ODkwMTIzNDU2
-    expiration: 3600000 # 1 hora en milisegundos
-
-# Comunicación con user-service
-user-service:
-  url: http://user-service:8080
+    expiration: 3600000

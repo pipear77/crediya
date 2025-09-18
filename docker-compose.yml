@@ -1,7 +1,39 @@
-  user-service:
+version: "3.9"
+
+services:
+  auth-db:
+    image: postgres:15
+    container_name: auth-db
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - crediya-net
+
+  loan-db:
+    image: postgres:15
+    container_name: loan-db
+    environment:
+      POSTGRES_DB: loan_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5434:5432"
+    volumes:
+      - loan-db-data:/var/lib/postgresql/data
+    networks:
+      - crediya-net
+
+  user-service:   # 👈 debe ir dentro de "services:"
     build:
       context: ./user-service
       dockerfile: Dockerfile
+    container_name: user-service
     ports:
       - "8080:8080"
     volumes:
@@ -11,10 +43,11 @@
     networks:
       - crediya-net
 
-  loan-service:
+  loan-service:   # 👈 también dentro de "services:"
     build:
       context: ./loan-service
       dockerfile: Dockerfile
+    container_name: loan-service
     ports:
       - "8081:8081"
     volumes:
@@ -24,3 +57,33 @@
       - user-service
     networks:
       - crediya-net
+
+volumes:
+  auth-db-data:
+  loan-db-data:
+
+networks:
+  crediya-net:
+    driver: bridge
+    
+loan-db:
+  image: postgres:15
+  environment:
+    POSTGRES_USER: crediya
+    POSTGRES_PASSWORD: crediya
+    POSTGRES_DB: loan_db
+  ports:
+    - "5434:5432"
+  volumes:
+    - ./db/create_db_loan.sql:/docker-entrypoint-initdb.d/create_db_loan.sql
+
+auth-db:
+  image: postgres:15
+  environment:
+    POSTGRES_USER: crediya
+    POSTGRES_PASSWORD: crediya
+    POSTGRES_DB: auth_db
+  ports:
+    - "5433:5432"
+  volumes:
+    - ./db/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
