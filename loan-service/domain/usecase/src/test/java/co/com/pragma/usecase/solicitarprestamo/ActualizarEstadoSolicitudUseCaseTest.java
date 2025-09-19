@@ -33,7 +33,8 @@ class ActualizarEstadoSolicitudUseCaseTest {
         solicitud.setEstado(EstadoSolicitud.PENDIENTE_REVISION);
 
         when(solicitudRepository.buscarPorId(id)).thenReturn(Mono.just(solicitud));
-        when(solicitudRepository.guardar(any(Solicitud.class))).thenAnswer(inv -> Mono.just(inv.getArgument(0)));
+        when(solicitudRepository.actualizar(any(Solicitud.class)))
+                .thenAnswer(inv -> Mono.just(inv.getArgument(0)));
 
         useCase.ejecutar(id, EstadoSolicitud.APROBADA)
                 .as(StepVerifier::create)
@@ -41,7 +42,8 @@ class ActualizarEstadoSolicitudUseCaseTest {
                 .verifyComplete();
 
         verify(solicitudRepository).buscarPorId(id);
-        verify(solicitudRepository).guardar(any(Solicitud.class));
+        verify(solicitudRepository).actualizar(any(Solicitud.class));
+
     }
 
     @Test

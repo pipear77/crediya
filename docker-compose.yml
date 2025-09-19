@@ -6,12 +6,13 @@ services:
     container_name: auth-db
     environment:
       POSTGRES_DB: auth_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
+      POSTGRES_USER: crediya
+      POSTGRES_PASSWORD: crediya
     ports:
       - "5433:5432"
     volumes:
       - auth-db-data:/var/lib/postgresql/data
+      - ./db/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
     networks:
       - crediya-net
 
@@ -20,38 +21,35 @@ services:
     container_name: loan-db
     environment:
       POSTGRES_DB: loan_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
+      POSTGRES_USER: crediya
+      POSTGRES_PASSWORD: crediya
     ports:
       - "5434:5432"
     volumes:
       - loan-db-data:/var/lib/postgresql/data
+      - ./db/create_db_loan.sql:/docker-entrypoint-initdb.d/create_db_loan.sql
     networks:
       - crediya-net
 
-  user-service:   # 👈 debe ir dentro de "services:"
+  user-service:
     build:
       context: ./user-service
       dockerfile: Dockerfile
     container_name: user-service
     ports:
       - "8080:8080"
-    volumes:
-      - ../user-service/applications/app-service/build/libs/user-service.jar:/app/user-service.jar
     depends_on:
       - auth-db
     networks:
       - crediya-net
 
-  loan-service:   # 👈 también dentro de "services:"
+  loan-service:
     build:
       context: ./loan-service
       dockerfile: Dockerfile
     container_name: loan-service
     ports:
       - "8081:8081"
-    volumes:
-      - ./loan-service/applications/app-service/build/libs/loan-service.jar:/app/loan-service.jar
     depends_on:
       - loan-db
       - user-service
@@ -65,25 +63,3 @@ volumes:
 networks:
   crediya-net:
     driver: bridge
-    
-loan-db:
-  image: postgres:15
-  environment:
-    POSTGRES_USER: crediya
-    POSTGRES_PASSWORD: crediya
-    POSTGRES_DB: loan_db
-  ports:
-    - "5434:5432"
-  volumes:
-    - ./db/create_db_loan.sql:/docker-entrypoint-initdb.d/create_db_loan.sql
-
-auth-db:
-  image: postgres:15
-  environment:
-    POSTGRES_USER: crediya
-    POSTGRES_PASSWORD: crediya
-    POSTGRES_DB: auth_db
-  ports:
-    - "5433:5432"
-  volumes:
-    - ./db/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
